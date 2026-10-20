@@ -248,6 +248,50 @@ h3 {
   background: var(--success-bg);
 }
 
+.scenario-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.scenario-card.is-current {
+  border: 2px solid var(--accent);
+}
+
+.scenario-card h3,
+.scenario-card p {
+  margin: 0;
+}
+
+.scenario-card .btn,
+.scenario-card .badge {
+  margin-top: auto;
+}
+
+.scenario-status {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.is-current-badge {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en"><head><base href="../"><meta charset="utf-8"><title>Test suite: fernhill</title>
+<script src="scenarios/shared/attempt-engine.js"></script><script src="scenarios/fernhill/attempt.js"></script></head>
+<body>
+<iframe id="f" style="width:1280px;height:900px"></iframe>
+<script>
+const out = [];
+const log = (ok, msg) => out.push(`${ok ? "PASS" : "FAIL"} ${msg}`);
+const info = (msg) => out.push(`INFO ${msg}`);
+const frame = document.getElementById("f");
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const errors = [];
+const PAGE = "scenarios/fernhill/index.html";
+
+function load(url) {
+  return new Promise(res => {
+    frame.onload = () => {
+      const w = frame.contentWindow;
+      w.addEventListener("error", e => errors.push(`${url}: ${e.message}`));
+      w.confirm = () => true; w.alert = () => {};
+      res(w);
+    };
+    frame.src = url;
+  });
+}
+async function until(fn, ms = 4000) {
+  const t = Date.now();
+  while (Date.now() - t < ms) { try { if (fn()) return true; } catch (e) {} await sleep(50); }
+  return false;
+}
+function injectAxe(w) {
+  return new Promise((res, rej) => {
+    const s = w.document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js";
+    s.onload = res; s.onerror = rej;
+    w.document.head.append(s);
+  });
+}
+async function axeRules(w) {
+  await injectAxe(w);
+  const r = await w.axe.run(w.document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] });
+  return r.violations.map(v => v.id).sort();
+}
+function lum(rgb) {
+  const [r, g, b] = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const parse = c => (c.match(/[\d.]+/g) || []).map(Number);
+function bgOf(w, node) {
+  for (let n = node; n && n.nodeType === 1; n = n.parentElement) {
+    const c = parse(w.getComputedStyle(n).backgroundColor);
+    if (c.length === 3 || (c.length === 4 && c[3] > 0)) return c.slice(0, 3);
+  }
+  return [255, 255, 255];
+}
+function contrastFails(w) {
+  const bad = new Set();
+  const walker = w.document.createTreeWalker(w.document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const t = walker.currentNode; const e = t.parentElement;
+    if (!t.textContent.trim() || !e.offsetParent && e.tagName !== "BODY") continue;
+    const cs = w.getComputedStyle(e);
+    if (e.closest(".visually-hidden,.skip-link,script,style")) continue;
+    const L1 = lum(parse(cs.color).slice(0, 3)), L2 = lum(bgOf(w, e));
+    const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700;
+    if (ratio < ((size >= 24 || (bold && size >= 18.66)) ? 3 : 4.5)) bad.add(e.className || e.tagName);
+  }
+  return [...bad].sort();
+}
+
+// Static DOM signature for each defect: true when the defect is present.
+const SIG = {
+  V01: d => !d.documentElement.hasAttribute("lang"),
+  V02: d => !d.getElementById("announcement-close").hasAttribute("aria-label"),
+  V03: d => d.querySelector(".site-nav").classList.contains("nav-minimal"),
+  V04: d => d.getElementById("tour-cta").tagName === "DIV",
+  V05: d => ![...d.querySelectorAll("h2,h3")].some(h => /Membership plans|What members say/.test(h.textContent)),
+  V06: d => d.querySelectorAll(".plans-table .dot").length === 12 && !d.querySelector(".plans-table .visually-hidden"),
+  V07: d => d.querySelector(".fine-print").classList.contains("muted"),
+  V08: d => !d.querySelector("img.stats").hasAttribute("alt"),
+  V09: d => [...d.querySelectorAll("#testimonials .testimonial")].some(t => t.hidden),
+  V10: d => !d.querySelector('label[for="email"]') && !d.querySelector('label[for="phone"]'),
+  V11: d => d.title === "Document",
+  V12: d => /user-scalable=no/.test(d.querySelector('meta[name="viewport"]').content),
+  V13: d => ["name", "email", "phone"].every(id => !d.getElementById(id).hasAttribute("autocomplete")),
+  V15: d => d.getElementById("tour-form").classList.contains("subtle"),
+  V16: d => d.getElementById("tour-submit").getAttribute("tabindex") === "1",
+  V18: d => [...d.querySelectorAll("#social a")].every(a => !a.hasAttribute("aria-label")),
+  V19: d => !d.getElementById("form-status").hasAttribute("role"),
+  V20: d => d.getElementById("social").classList.contains("compact"),
+};
+const EXPECTED_AXE = { V01: ["html-has-lang"], V02: ["button-name"], V07: ["color-contrast"], V08: ["image-alt"], V12: ["meta-viewport"], V18: ["link-name"], V20: ["target-size"] };
+
+async function submitEmpty(d) { d.getElementById("tour-form").requestSubmit(); await sleep(50); }
+
+(async () => {
+  try {
+    const ALL = A11yAttempt.get("fernhill").ALL;
+    log(ALL.length === 20, "pool has 20 defects");
+
+    // ---------- Randomizer properties ----------
+    const groups = [["V01","V05","V11","V12"],["V03","V04","V16","V17"],["V02","V08","V18","V19"],["V10","V13","V14","V15"],["V06","V07","V09","V20"]];
+    const counts = Object.fromEntries(ALL.map(id => [id, 0]));
+    let okPick = true, okDet = true; const seen = new Set();
+    for (let i = 0; i < 2000; i++) {
+      const code = A11yAttempt.newCode();
+      const p = A11yAttempt.get("fernhill").pick(code);
+      if (p.length !== 10 || new Set(p).size !== 10 || !groups.every(g => g.filter(id => p.includes(id)).length === 2)) okPick = false;
+      if (A11yAttempt.get("fernhill").pick(code).join() !== p.join()) okDet = false;
+      p.forEach(id => counts[id]++); seen.add(p.join());
+    }
+    log(okPick, "every attempt has 10 distinct defects, 2 per group");
+    log(okDet, "same code always gives the same set");
+    const freqs = Object.values(counts).map(c => c / 2000);
+    log(Math.min(...freqs) > 0.42 && Math.max(...freqs) < 0.58, `each defect active ~50% of the time (range ${Math.min(...freqs).toFixed(2)}-${Math.max(...freqs).toFixed(2)})`);
+    info(`${seen.size} distinct sets across 2000 codes`);
+    log(A11yAttempt.get("fernhill").pick("classic").join() === "V01,V02,V03,V04,V05,V06,V07,V08,V09,V10", "classic set is the original 10");
+
+    // ---------- No defects: must be clean ----------
+    let w = await load(`${PAGE}?defects=none`); let d = w.document;
+    log(Object.entries(SIG).every(([, f]) => !f(d)), "corrected page: no defect signatures present");
+    let rules = await axeRules(w);
+    log(rules.length === 0, `corrected page: axe clean ${rules.join(",")}`);
+    let cf = contrastFails(w);
+    log(cf.length === 0, `corrected page: no contrast failures ${cf.join(",")}`);
+    log(d.title.startsWith("Fernhill") && d.querySelectorAll("#testimonials .testimonial:not([hidden])").length === 3, "corrected page: title + all testimonials visible");
+    await sleep(5500);
+    log(d.querySelectorAll("#testimonials .testimonial:not([hidden])").length === 3, "corrected page: testimonials do not rotate");
+    await submitEmpty(d);
+    log(d.getElementById("name-error").textContent.includes("Enter your full name") && !d.getElementById("name-error").hidden && d.getElementById("name").getAttribute("aria-invalid") === "true", "corrected page: text error + aria-invalid");
+    log(d.activeElement.id === "name", "corrected page: focus to first invalid");
+    d.getElementById("location").selectedIndex = 1; d.getElementById("location").dispatchEvent(new w.Event("change"));
+    log(d.activeElement.id === "name" && d.getElementById("form-status").textContent === "", "corrected page: select change does not submit");
+    d.getElementById("name").value = "Sam Lee"; d.getElementById("email").value = "bad";
+    d.getElementById("phone").value = "555"; d.getElementById("date").value = "2026-11-02";
+    await submitEmpty(d);
+    log(d.getElementById("email-error").textContent.includes("name@example.com") && d.activeElement.id === "email", "corrected page: invalid email error");
+    d.getElementById("email").value = "sam@example.com"; await submitEmpty(d);
+    log(/Thanks, Sam/.test(d.getElementById("form-status").textContent) && d.getElementById("form-status").getAttribute("role") === "status", "corrected page: success status announced");
+    log(d.getElementById("email-error").hidden && !d.getElementById("email").hasAttribute("aria-invalid"), "corrected page: errors cleared on success");
+    rules = await (async () => { const r = await w.axe.run(w.document, { runOnly: ["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22aa"] }); return r.violations.map(v => v.id); })();
+    log(rules.length === 0, `corrected page after form interactions: axe clean ${rules.join(",")}`);
+
+    // ---------- Each defect alone ----------
+    for (const id of ALL) {
+      w = await load(`${PAGE}?defects=${id}`); d = w.document;
+      const present = Object.entries(SIG).filter(([, f]) => f(d)).map(([k]) => k);
+      const expectedSig = SIG[id] ? [id] : [];
+      log(present.join() === expectedSig.join(), `${id} alone: signatures ${present.join(",") || "none"}`);
+      rules = await axeRules(w);
+      const exp = (EXPECTED_AXE[id] || []).slice().sort();
+      log(rules.join() === exp.join(), `${id} alone: axe ${rules.join(",") || "none"} (expected ${exp.join(",") || "none"})`);
+      cf = contrastFails(w);
+      log(cf.join() === (id === "V07" ? "fine-print muted" : ""), `${id} alone: contrast fails ${cf.join(",") || "none"}`);
+      if (id === "V14") {
+        await submitEmpty(d);
+        log(d.getElementById("name").classList.contains("invalid") && d.getElementById("name-error").hidden && !d.getElementById("name").hasAttribute("aria-invalid"), "V14: red border only, no error text or aria-invalid");
+      }
+      if (id === "V17") {
+        d.getElementById("location").selectedIndex = 1; d.getElementById("location").dispatchEvent(new w.Event("change"));
+        await sleep(50);
+        log(d.getElementById("name").getAttribute("aria-invalid") === "true", "V17: select change submits the form");
+      }
+      if (id === "V09") {
+        const vis = () => [...d.querySelectorAll("#testimonials .testimonial")].findIndex(t => !t.hidden);
+        const a = vis(); await sleep(5300);
+        log(vis() !== a, "V09: testimonials rotate");
+      }
+      if (id === "V04") {
+        d.getElementById("tour-cta").click();
+        log(d.activeElement.id === "name" && d.getElementById("tour-cta").tabIndex === -1, "V04: div works by mouse, not focusable");
+      }
+      if (id === "V19") {
+        for (const [k, v] of [["name","Al"],["email","a@b.co"],["phone","1"],["date","2026-11-02"]]) d.getElementById(k).value = v;
+        await submitEmpty(d);
+        log(/Thanks, Al/.test(d.getElementById("form-status").textContent), "V19: message still shown visually");
+      }
+    }
+
+    // ---------- All defects together ----------
+    w = await load(`${PAGE}?defects=all`); d = w.document;
+    log(Object.entries(SIG).every(([, f]) => f(d)), "all defects: every signature present");
+    rules = await axeRules(w);
+    info(`all defects: axe rules ${rules.join(",")}`);
+    cf = contrastFails(w);
+    log(cf.join() === "fine-print muted", `all defects: only fine print fails contrast (${cf.join(",")})`);
+
+    // ---------- Page and app agree for random codes ----------
+    let agree = true;
+    for (let i = 0; i < 6; i++) {
+      const code = A11yAttempt.newCode(); const set = A11yAttempt.get("fernhill").pick(code);
+      w = await load(`${PAGE}?attempt=${code}`); d = w.document;
+      const present = Object.entries(SIG).filter(([, f]) => f(d)).map(([k]) => k);
+      const expected = set.filter(id => SIG[id]);
+      if (present.join() !== expected.join()) { agree = false; info(`mismatch ${code}: ${present} vs ${expected}`); }
+    }
+    log(agree, "page applies exactly the defects pick() selects, for 6 random codes");
+    w = await load(PAGE); d = w.document;
+    log(Object.entries(SIG).filter(([, f]) => f(d)).map(([k]) => k).join() === "V01,V02,V03,V04,V05,V06,V07,V08,V09,V10", "no attempt code: classic set applied");
+
+    // ---------- Training app ----------
+    localStorage.clear();
+    w = await load("index.html"); d = w.document;
+    await until(() => d.querySelectorAll("#f-wcag option").length === 56);
+    const code = JSON.parse(localStorage.getItem("a11y-audit-lab:fernhill") || "null")?.attempt || d.getElementById("launch-link").href.split("attempt=")[1];
+    log(/^[A-Z2-9]{6}$/.test(code), `app created attempt code ${code}`);
+    log(d.getElementById("launch-link").getAttribute("href") === `${PAGE}?attempt=${code}`, "launch link carries attempt code");
+    log(d.getElementById("scenario-meta").textContent.includes(code) && d.getElementById("scenario-meta").textContent.includes("pool of 20"), "dashboard shows attempt + pool");
+    d.getElementById("f-location").value = "x"; d.getElementById("f-description").value = "y"; d.getElementById("save-btn").click();
+    w = await load("index.html"); d = w.document;
+    await until(() => d.querySelectorAll("#f-wcag option").length === 56);
+    log(d.getElementById("launch-link").getAttribute("href").endsWith(code), "attempt code persists across reload");
+    d.getElementById("submit-btn").click();
+    await until(() => !d.getElementById("results").hidden);
+    const shown = [...d.querySelectorAll("#answer-key > li")].map(li => li.id.replace("violation-", "")).sort();
+    log(shown.join() === A11yAttempt.get("fernhill").pick(code).join(), `answer key shows this attempt's 10 (${shown.join(",")})`);
+    log(d.getElementById("score").textContent.startsWith("0 of 10"), "score out of 10");
+    log(d.getElementById("corrected-link").getAttribute("href") === `${PAGE}?defects=none`, "corrected page link present");
+    d.getElementById(`identified-${shown[0]}`).click();
+    log(d.getElementById("score").textContent.startsWith("1 of 10") && d.querySelectorAll("#missed-list li").length === 9, "scoring works on active set");
+    await injectAxe(w); let ar = await w.axe.run(w.document, { runOnly: ["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22aa"] });
+    log(ar.violations.length === 0, `app results: axe clean ${ar.violations.map(v => v.id)}`);
+    cf = contrastFails(w); log(cf.length === 0, `app results: contrast ok ${cf}`);
+    d.getElementById("reset-btn").click();
+    const code2 = d.getElementById("launch-link").getAttribute("href").split("attempt=")[1];
+    log(code2 && code2 !== code && d.getElementById("results").hidden && d.querySelectorAll("#findings-list > li").length === 0, `new attempt gets new code ${code2}`);
+    log(d.getElementById("scenario-meta").textContent.includes(code2), "dashboard updates to new code");
+
+    // legacy saved audit without attempt
+    localStorage.setItem("a11y-audit-lab:fernhill", JSON.stringify({ findings: [{ id: "a", location: "L", description: "D", wcag: "" }], submitted: true, identified: ["V02"] }));
+    w = await load("index.html"); d = w.document;
+    await until(() => !d.getElementById("results").hidden && d.querySelectorAll("#answer-key > li").length);
+    log([...d.querySelectorAll("#answer-key > li")].map(li => li.id.slice(10)).join() === "V01,V02,V03,V04,V05,V06,V07,V08,V09,V10" && d.getElementById("score").textContent.startsWith("1 of 10"), "legacy audit keeps classic set and marks");
+    log(d.getElementById("launch-link").getAttribute("href").endsWith("attempt=classic"), "legacy launch link uses classic set");
+  } catch (e) {
+    log(false, `harness exception: ${e.stack}`);
+  }
+  log(errors.length === 0, `no page JS errors ${errors.join("; ")}`);
+  new Image().src = "/__results?" + encodeURIComponent(out.join("\n"));
+  const report = document.createElement("pre"); report.id = "report"; report.textContent = out.join("\n"); document.body.prepend(report);
+})();
+</script>
+</body></html>

@@ -1,19 +1,22 @@
 {
   "scenario": "fernhill",
+  "notes": "Pool of 20 defects in five groups of four. Each attempt activates two per group (see scenarios/fernhill/attempt.js). Every defect is off by default, and the page with no defects active is intended to pass WCAG 2.2 Level A and AA.",
   "violations": [
     {
       "id": "V01",
+      "group": "Page structure",
       "title": "Page language not declared",
       "wcag": "3.1.1",
       "related_wcag": [],
       "element": "<html> element",
       "selector": "html",
       "description": "The html element has no lang attribute, so screen readers cannot determine which language and pronunciation rules to use for the page.",
-      "how_to_find": "Inspect the root element in DevTools or view source. Automated checkers (axe, WAVE) flag this as html-has-lang.",
+      "how_to_find": "Inspect the root element in the DevTools Elements panel. Automated checkers (axe, WAVE) flag this as html-has-lang.",
       "fix": "Add lang=\"en\" to the html element."
     },
     {
       "id": "V02",
+      "group": "Screen reader",
       "title": "Announcement banner close button has no accessible name",
       "wcag": "4.1.2",
       "related_wcag": ["1.1.1"],
@@ -25,39 +28,43 @@
     },
     {
       "id": "V03",
+      "group": "Keyboard and interaction",
       "title": "Main navigation links have no visible focus indicator",
       "wcag": "2.4.7",
       "related_wcag": [],
       "element": "Header navigation links (Spaces, Plans, Community, FAQ, Contact)",
       "selector": ".site-nav a",
       "description": "The stylesheet sets outline: none on navigation links with no replacement focus style, so keyboard users cannot see which link has focus.",
-      "how_to_find": "Tab from the top of the page into the main navigation and watch for a focus indicator. Inspect the CSS rule .site-nav a:focus.",
+      "how_to_find": "Tab from the top of the page into the main navigation and watch for a focus indicator. Inspect the :focus styles on the links.",
       "fix": "Remove outline: none or provide a clearly visible :focus-visible style (e.g. a 2px outline with 3:1 contrast)."
     },
     {
       "id": "V04",
+      "group": "Keyboard and interaction",
       "title": "\"Book a free tour\" button is not keyboard operable",
       "wcag": "2.1.1",
       "related_wcag": ["4.1.2"],
-      "element": "Hero section, \"Book a free tour\" call-to-action",
+      "element": "Hero section, \"Book a free tour\" call to action",
       "selector": "#tour-cta",
-      "description": "The primary call to action is a div with a click handler. It has no tabindex, button role or key handling, so keyboard users cannot reach or activate it, and screen readers do not expose it as a button.",
-      "how_to_find": "Tab through the hero: focus moves from the navigation straight to \"See plans and pricing\", skipping the tour button. Inspect the element to see it is a div.",
+      "description": "The primary call to action is a div with a click handler. It has no tabindex, role or key handling, so keyboard users cannot reach or activate it, and screen readers do not expose it as a control.",
+      "how_to_find": "Tab through the hero: focus skips the tour button and lands on \"See plans and pricing\". Inspect the element to see it is a div.",
       "fix": "Use a native <a href=\"#tour\"> or <button> element instead of a div."
     },
     {
       "id": "V05",
+      "group": "Page structure",
       "title": "Section headings are styled text, not heading elements",
       "wcag": "1.3.1",
       "related_wcag": ["2.4.6"],
       "element": "\"Membership plans\" and \"What members say\" section titles",
-      "selector": ".section-title",
+      "selector": ".section-title, .section-title-small",
       "description": "Two section titles look like headings but are div elements. They are missing from the heading structure, so screen reader users navigating by heading skip the pricing and testimonial content.",
       "how_to_find": "Open a screen reader headings list (NVDA Insert+F7, VoiceOver rotor) or a headings bookmarklet and compare it with the visual headings.",
-      "fix": "Mark up \"Membership plans\" as an h2 and \"What members say\" as an h3 (or h2)."
+      "fix": "Mark up \"Membership plans\" as an h2 and \"What members say\" as an h3."
     },
     {
       "id": "V06",
+      "group": "Visual",
       "title": "Plan features indicated by color alone",
       "wcag": "1.4.1",
       "related_wcag": ["1.1.1", "1.3.1"],
@@ -65,10 +72,11 @@
       "selector": ".plans-table .dot",
       "description": "Whether a feature is included is shown only by green or red dots of identical shape. Users who cannot distinguish red from green cannot read the table, and the empty spans give screen readers no information at all.",
       "how_to_find": "View the table in grayscale or with a color-blindness simulator; then read it with a screen reader and note the empty data cells.",
-      "fix": "Add text or distinct icons with text alternatives in each cell, e.g. a check mark with visually hidden \"Included\" and a dash with \"Not included\"."
+      "fix": "Use distinct shapes (e.g. a check and a dash) with text alternatives in each cell, such as visually hidden \"Included\" and \"Not included\"."
     },
     {
       "id": "V07",
+      "group": "Visual",
       "title": "Pricing fine print has insufficient contrast",
       "wcag": "1.4.3",
       "related_wcag": [],
@@ -76,10 +84,11 @@
       "selector": ".fine-print",
       "description": "Small grey text (#a8a8a8) on the light green section background (#f3f7f5) has a contrast ratio of about 2.2:1, well below the 4.5:1 minimum for normal-size text.",
       "how_to_find": "Measure the text with a contrast analyzer or the DevTools color picker.",
-      "fix": "Darken the text to at least #5f6863 (about 5.5:1 on this background)."
+      "fix": "Darken the text to at least #5f6863 (about 5.3:1 on this background)."
     },
     {
       "id": "V08",
+      "group": "Screen reader",
       "title": "Infographic image has no text alternative",
       "wcag": "1.1.1",
       "related_wcag": [],
@@ -91,6 +100,7 @@
     },
     {
       "id": "V09",
+      "group": "Visual",
       "title": "Testimonials rotate automatically with no way to pause",
       "wcag": "2.2.2",
       "related_wcag": [],
@@ -98,10 +108,11 @@
       "selector": "#testimonials",
       "description": "The testimonials change every 5 seconds indefinitely. There is no pause, stop or hide control, which distracts users with attention disorders and leaves slow readers and screen magnifier users unable to finish a quote.",
       "how_to_find": "Watch the testimonial area for more than five seconds and look for a pause control.",
-      "fix": "Add a visible, keyboard-operable Pause button, stop rotation on hover and focus, or show all testimonials statically."
+      "fix": "Show all testimonials statically, or add a visible, keyboard-operable Pause button and stop rotation on hover and focus."
     },
     {
       "id": "V10",
+      "group": "Forms",
       "title": "Email and phone fields use placeholders instead of labels",
       "wcag": "3.3.2",
       "related_wcag": ["1.3.1", "4.1.2"],
@@ -110,6 +121,126 @@
       "description": "The email and phone inputs have no label element. The placeholder text disappears as soon as the user starts typing, leaving no persistent label, and the fields rely on placeholder fallback for their accessible names.",
       "how_to_find": "Inspect the form fields for associated label elements; type into a field and observe the instruction disappear.",
       "fix": "Add visible <label for=\"email\">Email address</label> and <label for=\"phone\">Phone number</label> elements, matching the other fields."
+    },
+    {
+      "id": "V11",
+      "group": "Page structure",
+      "title": "Page title does not describe the page",
+      "wcag": "2.4.2",
+      "related_wcag": [],
+      "element": "<title> element",
+      "selector": "title",
+      "description": "The page title is the generic default \"Document\". Screen reader users hear it first when the page loads, and it does not identify the site or page in browser tabs, history or bookmarks.",
+      "how_to_find": "Check the browser tab text, or run document.title in the DevTools console. Listen to what a screen reader announces on page load.",
+      "fix": "Use a descriptive title such as \"Fernhill Coworking | Desks, private offices and meeting rooms\"."
+    },
+    {
+      "id": "V12",
+      "group": "Page structure",
+      "title": "Viewport settings prevent zooming",
+      "wcag": "1.4.4",
+      "related_wcag": ["1.4.10"],
+      "element": "<meta name=\"viewport\"> element",
+      "selector": "meta[name=\"viewport\"]",
+      "description": "The viewport meta tag sets maximum-scale=1 and user-scalable=no, which blocks pinch zoom on many mobile browsers. Low-vision users cannot enlarge the text.",
+      "how_to_find": "Inspect the viewport meta tag in the document head, or try to pinch-zoom on a phone or in a mobile emulator. axe flags this as meta-viewport.",
+      "fix": "Remove maximum-scale and user-scalable from the content attribute: content=\"width=device-width, initial-scale=1\"."
+    },
+    {
+      "id": "V13",
+      "group": "Forms",
+      "title": "Personal data fields do not identify their purpose",
+      "wcag": "1.3.5",
+      "related_wcag": [],
+      "element": "\"Book a free tour\" form, name, email and phone inputs",
+      "selector": "#name, #email, #phone",
+      "description": "The name, email and phone fields collect the user's own information but have no autocomplete attribute. Browsers cannot autofill them, and assistive tools that add familiar icons or labels based on input purpose cannot identify them.",
+      "how_to_find": "Inspect each input for an autocomplete attribute with a valid token; try browser autofill on the form.",
+      "fix": "Add autocomplete=\"name\", autocomplete=\"email\" and autocomplete=\"tel\" to the respective inputs."
+    },
+    {
+      "id": "V14",
+      "group": "Forms",
+      "title": "Form errors shown only by a red border",
+      "wcag": "3.3.1",
+      "related_wcag": ["1.4.1", "3.3.3"],
+      "element": "\"Book a free tour\" form validation",
+      "selector": "#tour-form .invalid",
+      "description": "Submitting the form with empty or invalid fields only turns the field borders red. There is no error text, no aria-invalid and nothing for a screen reader to announce, so users are not told which fields are wrong or why.",
+      "how_to_find": "Submit the form empty or with an invalid email address. Look for error text, then repeat with a screen reader and listen for any explanation.",
+      "fix": "Show a text error next to each invalid field (e.g. \"Enter an email address, like name@example.com\"), link it with aria-describedby and set aria-invalid=\"true\"."
+    },
+    {
+      "id": "V15",
+      "group": "Forms",
+      "title": "Form field borders have insufficient contrast",
+      "wcag": "1.4.11",
+      "related_wcag": [],
+      "element": "\"Book a free tour\" form inputs and select",
+      "selector": "#tour-form input, #tour-form select",
+      "description": "Input and select borders are #dde2df on a white background, a contrast ratio of about 1.3:1. Low-vision users cannot see where the fields are, which needs at least 3:1.",
+      "how_to_find": "Measure the field border against the page background with a contrast analyzer or the DevTools color picker.",
+      "fix": "Use a border color with at least 3:1 contrast, such as #6b7570 (about 4.8:1)."
+    },
+    {
+      "id": "V16",
+      "group": "Keyboard and interaction",
+      "title": "Positive tabindex makes focus jump to the bottom of the page",
+      "wcag": "2.4.3",
+      "related_wcag": [],
+      "element": "\"Request tour\" submit button",
+      "selector": "#tour-submit",
+      "description": "The submit button has tabindex=\"1\", so it receives focus before every other element. The first Tab press on the page jumps past the skip link, navigation and content to the bottom of the form.",
+      "how_to_find": "Load the page and press Tab once; note where focus lands. Inspect the element or search the DOM for tabindex values greater than 0.",
+      "fix": "Remove the tabindex attribute so the button follows the natural DOM order."
+    },
+    {
+      "id": "V17",
+      "group": "Keyboard and interaction",
+      "title": "Changing the location menu submits the form",
+      "wcag": "3.2.2",
+      "related_wcag": [],
+      "element": "\"Book a free tour\" form, Location select",
+      "selector": "#location",
+      "description": "Choosing an option in the Location select immediately submits the form, with no warning. Keyboard users who arrow through the options trigger a submission (and error messages or focus movement) on the first key press.",
+      "how_to_find": "Tab to the Location select and press the Down arrow, or pick a different option with the mouse. Observe the form submitting or focus moving to an error.",
+      "fix": "Remove the change handler and let users submit with the Request tour button."
+    },
+    {
+      "id": "V18",
+      "group": "Screen reader",
+      "title": "Social media links have no accessible names",
+      "wcag": "2.4.4",
+      "related_wcag": ["4.1.2", "1.1.1"],
+      "element": "Footer, social media icon links",
+      "selector": "#social a",
+      "description": "The three footer social links contain only icons with no text or aria-label. Screen readers announce them as \"link\" or read the URL, so users cannot tell where they lead.",
+      "how_to_find": "Open a screen reader links list (NVDA Insert+F7, VoiceOver rotor) or check each link's computed name in DevTools. axe flags this as link-name.",
+      "fix": "Add aria-label=\"Fernhill on Instagram\" (and equivalents) to each link, keeping the SVGs aria-hidden."
+    },
+    {
+      "id": "V19",
+      "group": "Screen reader",
+      "title": "Form confirmation is not announced",
+      "wcag": "4.1.3",
+      "related_wcag": [],
+      "element": "\"Book a free tour\" form, confirmation message",
+      "selector": "#form-status",
+      "description": "After a successful submission, a \"Thanks…\" message appears below the button, but it is not in a live region. Screen reader users hear nothing and do not know the request was sent.",
+      "how_to_find": "Complete and submit the form with a screen reader running and listen for the confirmation. Inspect the message container for role=\"status\" or aria-live.",
+      "fix": "Add role=\"status\" to the message container so updates are announced without moving focus."
+    },
+    {
+      "id": "V20",
+      "group": "Visual",
+      "title": "Social media links are too small to tap",
+      "wcag": "2.5.8",
+      "related_wcag": [],
+      "element": "Footer, social media icon links",
+      "selector": "#social a",
+      "description": "The social links are 16 by 16 CSS pixels with 4 pixels between them. They are below the 24 by 24 minimum and too close together for the spacing exception, so users with tremors or limited dexterity easily hit the wrong one.",
+      "how_to_find": "Measure the links in DevTools (box model or the element's dimensions) and check the spacing between them.",
+      "fix": "Make each link at least 24 by 24 CSS pixels (40 by 40 is better), or space them so a 24px circle centered on each does not overlap its neighbors."
     }
   ]
 }

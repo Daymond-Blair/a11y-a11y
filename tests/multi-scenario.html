@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><base href="../"><meta charset="utf-8"><title>Test suite: multi-scenario</title>
+<script src="scenarios/shared/attempt-engine.js"></script>
+<script src="scenarios/larkspur/attempt.js"></script></head>
+<body>
+<iframe id="f" style="width:1280px;height:900px"></iframe>
+<script>
+const out = [];
+const log = (ok, msg) => out.push(`${ok ? "PASS" : "FAIL"} ${msg}`);
+const info = (msg) => out.push(`INFO ${msg}`);
+const frame = document.getElementById("f");
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const errors = [];
+function load(url) {
+  return new Promise(res => {
+    frame.onload = () => { const w = frame.contentWindow; w.addEventListener("error", e => errors.push(`${url}: ${e.message}`)); w.confirm = () => true; w.alert = () => {}; res(w); };
+    frame.src = url;
+  });
+}
+async function until(fn, ms = 5000) { const t = Date.now(); while (Date.now() - t < ms) { try { if (fn()) return true; } catch (e) {} await sleep(50); } return false; }
+function injectAxe(w) { return new Promise((res, rej) => { const s = w.document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js"; s.onload = res; s.onerror = rej; w.document.head.append(s); }); }
+
+(async () => {
+  try {
+    // F12 timer first (starts a 90 s wait in its own frame)
+    const timerFrame = document.createElement("iframe"); document.body.append(timerFrame);
+    await new Promise(r => { timerFrame.onload = r; timerFrame.src = "scenarios/cedarvalley/index.html?defects=F12"; });
+    const td = timerFrame.contentDocument;
+    td.getElementById("p-name").value = "Ana Silva"; td.getElementById("p-name").dispatchEvent(new Event("input", { bubbles: true }));
+    const noTimerFrame = document.createElement("iframe"); document.body.append(noTimerFrame);
+    await new Promise(r => { noTimerFrame.onload = r; noTimerFrame.src = "scenarios/cedarvalley/index.html?defects=none"; });
+    noTimerFrame.contentDocument.getElementById("p-name").value = "Ana Silva";
+    const timerStart = Date.now();
+
+    localStorage.clear();
+    let w = await load("index.html"); let d = w.document;
+    await until(() => d.querySelectorAll("#scenario-list li").length === 3 && d.querySelectorAll("#f-wcag option").length === 56);
+    const cards = () => [...d.querySelectorAll("#scenario-list li")];
+    log(cards().length === 3, "dashboard lists 3 scenarios");
+    log(cards()[0].getAttribute("aria-current") === "true" && d.getElementById("scenario-title").textContent.includes("Fernhill"), "Fernhill selected by default");
+    log(cards().every(c => c.textContent.includes("Not started")), "all scenarios not started");
+    d.getElementById("f-location").value = "html"; d.getElementById("f-description").value = "no lang"; d.getElementById("save-btn").click();
+    log(cards()[0].textContent.includes("In progress · 1 logged"), "Fernhill card shows progress");
+
+    cards()[1].querySelector("button").click();
+    await until(() => d.getElementById("scenario-title").textContent.includes("Larkspur"));
+    log(d.activeElement.id === "scenario-title", "selecting a scenario moves focus to its title");
+    const lCode = d.getElementById("launch-link").getAttribute("href").split("attempt=")[1];
+    log(d.getElementById("launch-link").getAttribute("href").startsWith("scenarios/larkspur/index.html?attempt=") && /^[A-Z2-9]{6}$/.test(lCode), `Larkspur launch link with code ${lCode}`);
+    log(d.querySelectorAll("#findings-list > li").length === 0, "Larkspur starts with no findings");
+    d.getElementById("f-location").value = "swatches"; d.getElementById("f-description").value = "not keyboard"; d.getElementById("save-btn").click();
+    d.getElementById("submit-btn").click();
+    await until(() => !d.getElementById("results").hidden && d.querySelectorAll("#answer-key > li").length);
+    const shown = [...d.querySelectorAll("#answer-key > li")].map(li => li.id.replace("violation-", "")).sort();
+    log(shown.join() === A11yAttempt.get("larkspur").pick(lCode).join(), `Larkspur answer key matches attempt (${shown})`);
+    log(d.getElementById("corrected-link").getAttribute("href") === "scenarios/larkspur/index.html?defects=none", "corrected link points to Larkspur");
+    d.getElementById(`identified-${shown[0]}`).click();
+    log(cards()[1].textContent.includes("Submitted · 1 of 10 found"), "Larkspur card shows score");
+    await injectAxe(w);
+    let ar = await w.axe.run(d, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] });
+    log(ar.violations.length === 0, `app with scenario list: axe clean ${ar.violations.map(v => v.id)}`);
+
+    cards()[0].querySelector("button").click();
+    await until(() => d.getElementById("scenario-title").textContent.includes("Fernhill"));
+    log(d.querySelectorAll("#findings-list > li").length === 1 && d.getElementById("results").hidden, "Fernhill findings kept separately, not submitted");
+
+    w = await load("index.html"); d = w.document;
+    await until(() => d.querySelectorAll("#scenario-list li").length === 3);
+    log(d.getElementById("scenario-title").textContent.includes("Fernhill") && cards()[1].textContent.includes("Submitted"), "selection and statuses persist across reload");
+
+    cards()[2].querySelector("button").click();
+    await until(() => d.getElementById("scenario-title").textContent.includes("Cedar"));
+    const cCode = d.getElementById("launch-link").getAttribute("href").split("attempt=")[1];
+    d.getElementById("reset-btn").click();
+    await sleep(100);
+    const cCode2 = d.getElementById("launch-link").getAttribute("href").split("attempt=")[1];
+    log(cCode2 !== cCode && d.getElementById("scenario-title").textContent.includes("Cedar"), "new attempt only affects the current scenario");
+    log(cards()[0].textContent.includes("1 logged") && cards()[1].textContent.includes("Submitted"), "other scenarios untouched by new attempt");
+
+    // Mobile width check for the app
+    frame.style.width = "320px"; await sleep(300);
+    log(d.documentElement.scrollWidth <= d.documentElement.clientWidth + 1, "app has no horizontal scroll at 320px");
+    frame.style.width = "1280px";
+
+    // F12 result
+    const remaining = 92000 - (Date.now() - timerStart);
+    if (remaining > 0) await sleep(remaining);
+    log(td.getElementById("p-name").value === "", "F12: form cleared after 90 s idle");
+    log(noTimerFrame.contentDocument.getElementById("p-name").value === "Ana Silva", "corrected page keeps entries after 90 s");
+  } catch (e) {
+    log(false, `harness exception: ${e.stack}`);
+  }
+  log(errors.length === 0, `no page JS errors ${errors.join("; ")}`);
+  new Image().src = "/__results?" + encodeURIComponent(out.join("\n"));
+  const report = document.createElement("pre"); report.id = "report"; report.textContent = out.join("\n"); document.body.prepend(report);
+})();
+</script>
+</body></html>

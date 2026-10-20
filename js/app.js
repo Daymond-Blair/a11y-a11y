@@ -1,12 +1,13 @@
 "use strict";
 
-const SCENARIO_ID = "fernhill";
-const STORAGE_KEY = `a11y-audit-lab:${SCENARIO_ID}`;
+const SELECTED_KEY = "a11y-audit-lab:selected";
+const storageKey = (id) => `a11y-audit-lab:${id}`;
 
 const $ = (id) => document.getElementById(id);
 
 const els = {
   loadError: $("load-error"),
+  scenarioList: $("scenario-list"),
   title: $("scenario-title"),
   summary: $("scenario-summary"),
   meta: $("scenario-meta"),
@@ -38,24 +39,31 @@ const els = {
   missedList: $("missed-list"),
   resetBtn: $("reset-btn"),
   announcer: $("announcer"),
+  corrected: $("corrected-link"),
 };
 
+let scenarios = [];
 let scenario = null;
+let attempt = null;
 let criteria = new Map();
-let answerKey = null;
+const answerKeys = new Map();
 let editingId = null;
-let state = loadState();
+let state = { attempt: "", findings: [], submitted: false, identified: [] };
 
 /* ---------- State ---------- */
 
 function emptyState() {
-  return { findings: [], submitted: false, identified: [] };
+  return { attempt: A11yAttempt.newCode(), findings: [], submitted: false, identified: [] };
 }
 
-function loadState() {
+function loadState(id) {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && Array.isArray(saved.findings)) return { ...emptyState(), ...saved };
+    const saved = JSON.parse(localStorage.getItem(storageKey(id)));
+    if (saved && Array.isArray(saved.findings)) {
+      // Audits saved before randomization keep the original fixed defect set.
+      if (!saved.attempt && saved.findings.length) saved.attempt = "classic";
+      return { ...emptyState(), ...saved };
+    }
   } catch (err) {
     // Storage unavailable or corrupt: start fresh.
   }
@@ -64,7 +72,7 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(storageKey(scenario.id), JSON.stringify(state));
   } catch (err) {
     // Private mode or quota exceeded: the app still works for this session.
   }
@@ -110,14 +118,103 @@ function renderScenario() {
   els.title.textContent = scenario.title;
   els.summary.textContent = scenario.summary;
   els.scope.textContent = scenario.scope;
-  els.launch.href = scenario.url;
+  els.launch.href = `${scenario.url}?attempt=${encodeURIComponent(state.attempt)}`;
+  els.corrected.href = `${scenario.url}?defects=none`;
   els.meta.replaceChildren(
     ...[
       ["Standard", scenario.standard],
-      ["Known violations", String(scenario.violation_count)],
-      ["Page", scenario.url],
+      ["Known violations", `${attempt.size}, drawn from a pool of ${attempt.ALL.length}`],
+      ["Attempt", state.attempt === "classic" ? "Original fixed set" : state.attempt],
     ].map(([term, value]) => el("div", {}, el("dt", { text: term }), el("dd", { text: value })))
   );
+}
+
+function scenarioStatus(s) {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(storageKey(s.id)));
+  } catch (err) {
+    // Unreadable storage counts as not started.
+  }
+  if (!saved || (!saved.findings?.length && !saved.submitted)) return "Not started";
+  if (saved.submitted) {
+    const size = A11yAttempt.get(s.id)?.size ?? s.violation_count;
+    return `Submitted · ${(saved.identified || []).length} of ${size} found`;
+  }
+  return `In progress · ${saved.findings.length} logged`;
+}
+
+function renderScenarioList() {
+  els.scenarioList.replaceChildren(
+    ...scenarios.map((s) => {
+      const current = s.id === scenario?.id;
+      const item = el(
+        "li",
+        { class: `scenario-card${current ? " is-current" : ""}` },
+        el("h3", { text: s.title }),
+        el("p", { class: "muted", text: s.focus }),
+        el("p", { class: "scenario-status", text: scenarioStatus(s) })
+      );
+      if (current) {
+        item.setAttribute("aria-current", "true");
+        item.append(el("p", { class: "badge is-current-badge", text: "Current scenario" }));
+      } else {
+        const btn = el("button", { type: "button", class: "btn btn-secondary btn-small" }, "Audit this page", el("span", { class: "visually-hidden", text: `: ${s.title}` }));
+        btn.addEventListener("click", () => selectScenario(s.id, true));
+        item.append(btn);
+      }
+      return item;
+    })
+  );
+}
+
+async function selectScenario(id, fromUser = false) {
+  const next = scenarios.find((s) => s.id === id) || scenarios[0];
+  try {
+    await loadScript(next.attempt_script);
+  } catch (err) {
+    showLoadError(err);
+    return;
+  }
+  scenario = next;
+  attempt = A11yAttempt.get(scenario.id);
+  state = loadState(scenario.id);
+  saveState();
+  try {
+    localStorage.setItem(SELECTED_KEY, scenario.id);
+  } catch (err) {
+    // Selection simply isn't remembered.
+  }
+  resetForm();
+  if (state.submitted) {
+    try {
+      await loadAnswerKey();
+    } catch (err) {
+      showLoadError(err);
+    }
+  }
+  renderAll();
+  if (fromUser) {
+    announce(`${scenario.title} selected.`);
+    els.title.focus();
+  }
+}
+
+const loadedScripts = new Map();
+function loadScript(src) {
+  if (!loadedScripts.has(src)) {
+    loadedScripts.set(
+      src,
+      new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`${src}: failed to load`));
+        document.head.append(script);
+      })
+    );
+  }
+  return loadedScripts.get(src);
 }
 
 function populateCriteria() {
@@ -325,6 +422,7 @@ function renderAuditState() {
   els.formHeading.textContent = submitted ? "Findings locked" : els.formHeading.textContent;
   els.submitPanel.hidden = submitted;
   els.results.hidden = !submitted;
+  if (scenario) renderScenarioList();
 }
 
 async function submitAudit() {
@@ -354,12 +452,18 @@ async function submitAudit() {
 }
 
 async function loadAnswerKey() {
-  if (!answerKey) answerKey = await fetchJson(scenario.answer_key);
+  if (!answerKeys.has(scenario.id)) answerKeys.set(scenario.id, await fetchJson(scenario.answer_key));
+}
+
+// The answer key holds the whole pool; only this attempt's defects are scored.
+function activeViolations() {
+  const ids = attempt.pick(state.attempt);
+  return answerKeys.get(scenario.id).violations.filter((v) => ids.includes(v.id));
 }
 
 function renderResults() {
-  if (!answerKey) return;
-  els.answerKey.replaceChildren(...answerKey.violations.map(renderViolation));
+  if (!answerKeys.has(scenario.id)) return;
+  els.answerKey.replaceChildren(...activeViolations().map(renderViolation));
   renderScore();
 }
 
@@ -405,12 +509,14 @@ function toggleIdentified(id, checked) {
   saveState();
   $(`violation-${id}`).classList.toggle("is-identified", checked);
   renderScore();
+  renderScenarioList();
 }
 
 function renderScore() {
-  const total = answerKey.violations.length;
-  const found = answerKey.violations.filter((v) => state.identified.includes(v.id));
-  const missed = answerKey.violations.filter((v) => !state.identified.includes(v.id));
+  const violations = activeViolations();
+  const total = violations.length;
+  const found = violations.filter((v) => state.identified.includes(v.id));
+  const missed = violations.filter((v) => !state.identified.includes(v.id));
   const percent = Math.round((found.length / total) * 100);
 
   els.score.replaceChildren(
@@ -424,16 +530,17 @@ function renderScore() {
 }
 
 function resetAudit() {
-  if (!window.confirm("Reset the audit? All findings and results will be deleted.")) return;
+  if (!window.confirm("Start a new attempt? All findings and results will be deleted, and the audit page will get a new set of defects.")) return;
   state = emptyState();
   saveState();
   resetForm();
   renderAll();
-  announce("Audit reset. Findings cleared.");
+  announce(`New attempt ${state.attempt} started. Findings cleared and a new set of defects selected.`);
   els.formHeading.focus();
 }
 
 function renderAll() {
+  if (scenario) renderScenario();
   renderFindings();
   renderAuditState();
   if (state.submitted) renderResults();
@@ -460,19 +567,26 @@ async function init() {
   }
 
   try {
-    const [scenarios, wcag] = await Promise.all([
+    const [scenarioData, wcag] = await Promise.all([
       fetchJson("data/scenarios.json"),
       fetchJson("data/wcag-criteria.json"),
     ]);
-    scenario = scenarios.scenarios.find((s) => s.id === SCENARIO_ID);
+    scenarios = scenarioData.scenarios;
     criteria = new Map(wcag.criteria.map((c) => [c.id, c]));
-    renderScenario();
     populateCriteria();
-    if (state.submitted) await loadAnswerKey();
+    // Load every scenario's defect pool so the list can show each one's status.
+    await Promise.all(scenarios.map((s) => loadScript(s.attempt_script)));
+    let selected = null;
+    try {
+      selected = localStorage.getItem(SELECTED_KEY);
+    } catch (err) {
+      // Fall back to the first scenario.
+    }
+    await selectScenario(selected);
   } catch (err) {
     showLoadError(err);
+    renderAll();
   }
-  renderAll();
 }
 
 init();

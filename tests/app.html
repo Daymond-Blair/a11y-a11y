@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><base href="../"><meta charset="utf-8"><title>Test suite: app</title></head>
+<body>
+<pre id="out">RUNNING</pre>
+<iframe id="f" style="width:1280px;height:900px"></iframe>
+<script>
+const out = [];
+const log = (ok, msg) => out.push(`${ok ? "PASS" : "FAIL"} ${msg}`);
+const info = (msg) => out.push(`INFO ${msg}`);
+const frame = document.getElementById("f");
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const errors = [];
+
+function load(url) {
+  return new Promise(res => {
+    frame.onload = () => {
+      const w = frame.contentWindow;
+      w.addEventListener("error", e => errors.push(`${url}: ${e.message}`));
+      w.confirm = () => true; w.alert = () => {};
+      res(w);
+    };
+    frame.src = url;
+  });
+}
+async function until(fn, ms = 4000) {
+  const t = Date.now();
+  while (Date.now() - t < ms) { try { if (fn()) return true; } catch (e) {} await sleep(50); }
+  return false;
+}
+function injectAxe(w) {
+  return new Promise((res, rej) => {
+    const s = w.document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js";
+    s.onload = res; s.onerror = rej;
+    w.document.head.append(s);
+  });
+}
+async function runAxe(w, label) {
+  try {
+    await injectAxe(w);
+    const r = await w.axe.run(w.document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] });
+    info(`axe ${label}: ${r.violations.length} rule(s) violated`);
+    for (const v of r.violations) info(`  axe ${v.id} x${v.nodes.length}: ${v.nodes.map(n => n.target.join(" ")).join(" | ")}`);
+  } catch (e) { info(`axe ${label}: could not load (${e})`); }
+}
+function lum(rgb) {
+  const [r, g, b] = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const parse = c => (c.match(/[\d.]+/g) || []).map(Number);
+function bgOf(w, node) {
+  for (let n = node; n && n.nodeType === 1; n = n.parentElement) {
+    const c = parse(w.getComputedStyle(n).backgroundColor);
+    if (c.length === 3 || (c.length === 4 && c[3] > 0)) return c.slice(0, 3);
+  }
+  return [255, 255, 255];
+}
+function contrastScan(w, label) {
+  const bad = new Map();
+  const walker = w.document.createTreeWalker(w.document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const t = walker.currentNode; const e = t.parentElement;
+    if (!t.textContent.trim() || !e.offsetParent && e.tagName !== "BODY") continue;
+    const cs = w.getComputedStyle(e);
+    if (cs.visibility === "hidden" || e.closest(".visually-hidden,.skip-link,script,style")) continue;
+    const L1 = lum(parse(cs.color).slice(0, 3)), L2 = lum(bgOf(w, e));
+    const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700;
+    const large = size >= 24 || (bold && size >= 18.66);
+    if (ratio < (large ? 3 : 4.5)) bad.set(e.className || e.tagName, ratio.toFixed(2));
+  }
+  info(`contrast ${label}: ${bad.size ? [...bad].map(([k, v]) => `${k}=${v}`).join(", ") : "no failures"}`);
+  return bad;
+}
+
+(async () => {
+  try {
+    localStorage.clear();
+    let w = await load("index.html");
+    let d = w.document;
+    log(await until(() => d.querySelectorAll("#f-wcag option").length === 56), "criteria select has 55 options + blank");
+    log(d.querySelector('label[for="f-steps"]') && d.querySelector('label[for="f-fix"]'), "steps and fix fields are labelled");
+
+    d.getElementById("save-btn").click();
+    log(d.getElementById("f-location").getAttribute("aria-invalid") === "true", "empty submit shows errors");
+    log(!d.getElementById("f-steps").hasAttribute("aria-invalid") && !d.getElementById("f-fix").hasAttribute("aria-invalid"), "steps/fix are optional");
+
+    const add = (loc, desc, sc, steps = "", fix = "") => {
+      d.getElementById("f-location").value = loc; d.getElementById("f-description").value = desc;
+      d.getElementById("f-steps").value = steps; d.getElementById("f-fix").value = fix;
+      d.getElementById("f-wcag").value = sc; d.getElementById("f-wcag").dispatchEvent(new w.Event("change"));
+      d.getElementById("save-btn").click();
+    };
+    add("html element", "No lang attribute", "3.1.1", "1. View source\n2. Inspect html element", 'Add lang="en"');
+    const f1 = d.querySelector("#findings-list > li");
+    log(f1.querySelector(".finding-details") && f1.textContent.includes("Steps to reproduce") && f1.textContent.includes('Add lang="en"'), "steps + fix shown in finding");
+    log(!d.getElementById("f-steps").value && !d.getElementById("f-fix").value, "steps/fix cleared after add");
+    add("Nav links", "No focus indicator", "2.4.7");
+    log(!d.querySelectorAll("#findings-list > li")[1].querySelector(".finding-details"), "no details block when steps/fix empty");
+    add("Footer", "Something", "");
+    log(d.querySelectorAll("#findings-list > li").length === 3, "3 findings listed");
+
+    d.querySelectorAll("#findings-list > li")[1].querySelector("button").click();
+    log(d.getElementById("f-location").value === "Nav links" && d.getElementById("f-steps").value === "", "edit loads finding without steps");
+    d.getElementById("f-description").value = "Nav links have outline:none";
+    d.getElementById("f-fix").value = "Restore focus outline";
+    d.getElementById("save-btn").click();
+    const f2 = d.querySelectorAll("#findings-list > li")[1];
+    log(f2.textContent.includes("outline:none") && f2.textContent.includes("Restore focus outline"), "edit saved incl. fix");
+
+    d.querySelector("#findings-list > li button").click();
+    log(d.getElementById("f-steps").value.startsWith("1. View source") && d.getElementById("f-fix").value === 'Add lang="en"', "edit loads steps + fix");
+    d.getElementById("cancel-edit-btn").click();
+    log(d.getElementById("save-btn").textContent === "Add finding" && !d.getElementById("f-steps").value, "cancel edit resets form");
+
+    d.querySelectorAll("#findings-list > li")[2].querySelectorAll("button")[1].click();
+    log(d.querySelectorAll("#findings-list > li").length === 2, "delete removes finding");
+
+    w = await load("index.html"); d = w.document;
+    await until(() => d.querySelectorAll("#f-wcag option").length === 56);
+    log(d.querySelectorAll("#findings-list > li").length === 2 && d.querySelector("#findings-list > li").textContent.includes("View source"), "findings incl. steps persist across reload");
+
+    // Old saved data without steps/fix must still render
+    localStorage.setItem("a11y-audit-lab:fernhill", JSON.stringify({ findings: [{ id: "old", location: "Legacy", description: "Old finding", wcag: "1.1.1" }], submitted: false, identified: [] }));
+    w = await load("index.html"); d = w.document;
+    await until(() => d.querySelectorAll("#f-wcag option").length === 56);
+    log(d.querySelectorAll("#findings-list > li").length === 1, "legacy finding without new fields renders");
+    d.querySelector("#findings-list > li button").click();
+    log(d.getElementById("f-steps").value === "" && d.getElementById("f-fix").value === "", "legacy finding edits with empty fields");
+    d.getElementById("cancel-edit-btn").click();
+
+    d.getElementById("submit-btn").click();
+    log(await until(() => !d.getElementById("results").hidden), "results shown after submit");
+    log(d.querySelectorAll("#answer-key > li").length === 10, "answer key has 10 violations");
+    d.getElementById("identified-V08").click();
+    log(d.getElementById("score").textContent.startsWith("1 of 10"), "score updates");
+    contrastScan(w, "app results view");
+    await runAxe(w, "app results view");
+
+    d.getElementById("reset-btn").click();
+    log(d.querySelectorAll("#findings-list > li").length === 0 && !d.getElementById("finding-form").hidden, "reset clears audit");
+    d.getElementById("f-location").value = "x"; d.getElementById("f-description").value = "y";
+    d.getElementById("f-steps").value = "s"; d.getElementById("f-fix").value = "z";
+    d.getElementById("save-btn").click();
+    contrastScan(w, "app form with details");
+    await runAxe(w, "app form view");
+  } catch (e) {
+    log(false, `harness exception: ${e.stack}`);
+  }
+  log(errors.length === 0, `no page JS errors ${errors.join("; ")}`);
+  document.getElementById("out").textContent = "DONE\n" + out.join("\n");
+  new Image().src = "/__results?" + encodeURIComponent(out.join("\n"));
+  const report = document.createElement("pre"); report.id = "report"; report.textContent = out.join("\n"); document.body.prepend(report);
+})();
+</script>
+</body></html>

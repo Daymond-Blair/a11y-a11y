@@ -75,6 +75,13 @@ def main():
 
     for key_file in sorted((ROOT / "data" / "answer-keys").glob("*.json")):
         key = json.loads(key_file.read_text(encoding="utf-8"))
+        attempt_js = ROOT / "scenarios" / key_file.stem / "attempt.js"
+        if attempt_js.exists():
+            groups = re.search(r"groups: \[(.*?)\],\s*(?:classic|\}\))", attempt_js.read_text(encoding="utf-8"), re.S)
+            pool = set(re.findall(r'"([A-Z]\d+)"', groups.group(1))) if groups else set()
+            key_ids = {v["id"] for v in key["violations"]}
+            if pool != key_ids:
+                errors.append(f"{key_file.name}: ids {sorted(key_ids ^ pool)} differ between answer key and attempt.js")
         for v in key["violations"]:
             for sc_id in [v["wcag"], *v.get("related_wcag", [])]:
                 if sc_id not in local:

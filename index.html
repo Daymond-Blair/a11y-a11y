@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accessibility Audit Training Lab</title>
-  <meta name="description" content="Practice WCAG 2.2 accessibility audits against a page with known, intentionally injected violations.">
+  <meta name="description" content="Practice WCAG 2.2 accessibility audits against pages with known, intentionally injected violations.">
   <link rel="stylesheet" href="css/app.css">
+  <script src="scenarios/shared/attempt-engine.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -14,7 +15,7 @@
   <header class="app-header">
     <div class="wrap header-inner">
       <p class="brand"><span class="brand-mark" aria-hidden="true">A11y</span> Audit Training Lab</p>
-      <button type="button" class="btn btn-ghost" id="reset-btn">Reset audit</button>
+      <button type="button" class="btn btn-ghost" id="reset-btn">New attempt</button>
     </div>
   </header>
 
@@ -26,11 +27,17 @@
       <noscript><p class="notice">This training app needs JavaScript. The audit site itself works without it.</p></noscript>
       <p class="notice notice-error" id="load-error" hidden></p>
 
+      <section class="panel" aria-labelledby="scenarios-heading">
+        <h2 id="scenarios-heading">Audit scenarios</h2>
+        <p class="muted">Each scenario keeps its own findings and attempt. Pick one to audit.</p>
+        <ul class="scenario-list" id="scenario-list"></ul>
+      </section>
+
       <section class="panel scenario" aria-labelledby="scenario-title">
         <div class="scenario-head">
           <div>
-            <p class="eyebrow">Audit scenario</p>
-            <h2 id="scenario-title">Loading scenario…</h2>
+            <p class="eyebrow">Current scenario</p>
+            <h2 id="scenario-title" tabindex="-1">Loading scenario…</h2>
           </div>
           <p class="badge" id="audit-state">In progress</p>
         </div>
@@ -88,7 +95,7 @@
               <button type="button" class="btn btn-secondary" id="cancel-edit-btn" hidden>Cancel edit</button>
             </div>
           </form>
-          <p class="notice" id="form-locked" hidden>This audit has been submitted, so findings are read-only. Reset the audit to start again.</p>
+          <p class="notice" id="form-locked" hidden>This audit has been submitted, so findings are read-only. Start a new attempt to audit again.</p>
         </section>
 
         <section class="panel" aria-labelledby="findings-heading">
@@ -108,6 +115,7 @@
         <h2 id="results-heading" tabindex="-1">Results</h2>
         <div class="score" id="score" aria-live="polite" aria-atomic="true"></div>
         <p>For each known violation below, compare it with your findings and tick the box if you identified it. Your findings that cite the same criterion are listed as possible matches.</p>
+        <p><a id="corrected-link" href="#" target="_blank" rel="noopener">Open the corrected page<span class="visually-hidden"> (opens in a new tab)</span></a> to compare it with the version you audited.</p>
 
         <h3>Answer key</h3>
         <ol class="answer-key" id="answer-key"></ol>

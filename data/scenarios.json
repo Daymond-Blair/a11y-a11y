@@ -3,12 +3,41 @@
     {
       "id": "fernhill",
       "title": "Fernhill Coworking landing page",
+      "focus": "Marketing page: navigation, pricing table, testimonials, contact form.",
       "summary": "Marketing landing page for a fictional coworking space, with navigation, a hero call to action, a pricing comparison table, testimonials, an FAQ and a tour booking form.",
       "url": "scenarios/fernhill/index.html",
       "answer_key": "data/answer-keys/fernhill.json",
+      "attempt_script": "scenarios/fernhill/attempt.js",
       "violation_count": 10,
+      "pool_size": 20,
       "standard": "WCAG 2.2 Level A and AA",
-      "scope": "Single page. Test it as you would a client page: keyboard, screen reader, visual and code inspection, plus any automated tools you normally use."
+      "scope": "Single page. Test it as you would a client page: keyboard, screen reader, visual and code inspection, plus any automated tools you normally use. Each attempt activates a different set of defects, applied when the page loads, so inspect the live DOM in DevTools rather than View Source."
+    },
+    {
+      "id": "larkspur",
+      "title": "Larkspur Outdoor product page",
+      "focus": "E-commerce: image gallery, product options, quantity, cart and dialogs.",
+      "summary": "Product detail page for a fictional outdoor gear shop, with an image gallery, color and size options, a quantity stepper, add to cart, a cart dialog, a size guide, specifications, reviews and related products.",
+      "url": "scenarios/larkspur/index.html",
+      "answer_key": "data/answer-keys/larkspur.json",
+      "attempt_script": "scenarios/larkspur/attempt.js",
+      "violation_count": 10,
+      "pool_size": 20,
+      "standard": "WCAG 2.2 Level A and AA",
+      "scope": "Single page. Exercise every control: choose options, change the quantity, add to cart, and open and close both dialogs with the keyboard and a screen reader. Also check zoom, reflow and text spacing. Defects are applied when the page loads, so inspect the live DOM in DevTools rather than View Source."
+    },
+    {
+      "id": "cedarvalley",
+      "title": "Cedar Valley Rec Center registration",
+      "focus": "Forms: labels, instructions, validation, error recovery and a review step.",
+      "summary": "Program registration form for a fictional recreation center, with participant, emergency contact and billing details, program choices, a password, inline validation, an error summary and a review step before payment.",
+      "url": "scenarios/cedarvalley/index.html",
+      "answer_key": "data/answer-keys/cedarvalley.json",
+      "attempt_script": "scenarios/cedarvalley/attempt.js",
+      "violation_count": 10,
+      "pool_size": 20,
+      "standard": "WCAG 2.2 Level A and AA",
+      "scope": "Single page. Fill in the form wrongly as well as correctly: submit it empty, enter invalid data, recover from the errors and complete the registration. Test with the keyboard and a screen reader, and leave the page idle for a while. Defects are applied when the page loads, so inspect the live DOM in DevTools rather than View Source."
     }
   ]
 }

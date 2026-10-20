@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en"><head><base href="../"><meta charset="utf-8"><title>Test suite: larkspur-cedarvalley</title>
+<script src="scenarios/shared/attempt-engine.js"></script>
+<script src="scenarios/larkspur/attempt.js"></script>
+<script src="scenarios/cedarvalley/attempt.js"></script></head>
+<body>
+<iframe id="f" style="width:1280px;height:900px"></iframe>
+<script>
+const out = [];
+const log = (ok, msg) => out.push(`${ok ? "PASS" : "FAIL"} ${msg}`);
+const info = (msg) => out.push(`INFO ${msg}`);
+const frame = document.getElementById("f");
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const errors = [];
+const ONLY = new URLSearchParams(location.search).get("only");
+
+function load(url, width = 1280) {
+  frame.style.width = `${width}px`;
+  return new Promise(res => {
+    frame.onload = () => {
+      const w = frame.contentWindow;
+      w.addEventListener("error", e => errors.push(`${url}: ${e.message}`));
+      w.confirm = () => true; w.alert = () => {};
+      res(w);
+    };
+    frame.src = url;
+  });
+}
+function injectAxe(w) {
+  return new Promise((res, rej) => {
+    const s = w.document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js";
+    s.onload = res; s.onerror = rej;
+    w.document.head.append(s);
+  });
+}
+async function axeRules(w) {
+  if (!w.axe) await injectAxe(w);
+  const r = await w.axe.run(w.document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] });
+  return r.violations.map(v => v.id).sort();
+}
+function lum(rgb) {
+  const [r, g, b] = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const parse = c => (c.match(/[\d.]+/g) || []).map(Number);
+function bgOf(w, node) {
+  for (let n = node; n && n.nodeType === 1; n = n.parentElement) {
+    const c = parse(w.getComputedStyle(n).backgroundColor);
+    if (c.length === 3 || (c.length === 4 && c[3] > 0)) return c.slice(0, 3);
+  }
+  return [255, 255, 255];
+}
+function contrastFails(w) {
+  const bad = new Set();
+  const walker = w.document.createTreeWalker(w.document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const t = walker.currentNode; const e = t.parentElement;
+    if (!t.textContent.trim() || !e.offsetParent && e.tagName !== "BODY") continue;
+    if (e.closest(".visually-hidden,.skip-link,script,style,dialog:not([open]),[hidden]")) continue;
+    if (e.closest("label") && e.closest("label").querySelector("input:disabled")) continue;
+    const cs = w.getComputedStyle(e);
+    const L1 = lum(parse(cs.color).slice(0, 3)), L2 = lum(bgOf(w, e));
+    const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700;
+    if (ratio < ((size >= 24 || (bold && size >= 18.66)) ? 3 : 4.5)) bad.add(`${e.tagName.toLowerCase()}.${e.className || e.id}`);
+  }
+  return [...bad].sort();
+}
+const SPACING_CSS = "* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }";
+function spacingClips(d, selector) {
+  const style = d.createElement("style"); style.textContent = SPACING_CSS; d.head.append(style);
+  const clipped = [...d.querySelectorAll(selector)].filter(e => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1);
+  style.remove();
+  return clipped.length;
+}
+const key = (w, k, opts = {}) => { const e = new w.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true, ...opts }); (w.document.activeElement || w.document.body).dispatchEvent(e); return e; };
+
+/* ================= Larkspur ================= */
+const L = "scenarios/larkspur/index.html";
+const LSIG = {
+  E01: d => !d.getElementById("review-es").hasAttribute("lang"),
+  E02: d => d.querySelectorAll("#specs tbody th").length === 0,
+  E03: d => d.body.classList.contains("wide"),
+  E04: d => d.getElementById("highlights").classList.contains("tight"),
+  E05: d => !!d.querySelector("div.swatch"),
+  E06: d => d.getElementById("size-close").tagName === "SPAN",
+  E09: d => !d.getElementById("main-image").hasAttribute("alt"),
+  E10: d => [...d.querySelectorAll(".qty-btn")].every(b => !b.hasAttribute("aria-label")),
+  E11: d => !d.getElementById("cart-status").hasAttribute("role"),
+  E12: d => d.getElementById("add-btn").getAttribute("aria-label") === "Purchase item",
+  E13: d => !d.querySelector(".buy-form fieldset"),
+  E14: d => d.getElementById("desc").classList.contains("quiet"),
+  E15: d => d.getElementById("qty-control").classList.contains("compact"),
+  E16: d => d.getElementById("swatches").classList.contains("soft"),
+  E17: d => d.getElementById("stock").classList.contains("light"),
+  E18: d => !!d.querySelector("#promo img"),
+  E19: d => /green button/.test(d.getElementById("instructions").textContent),
+  E20: d => !d.getElementById("ripstop-btn").hasAttribute("aria-expanded"),
+};
+
+async function larkspurBehaviour(w, id) {
+  const d = w.document;
+  if (id === "E03") {
+    const w2 = await load(`${L}?defects=E03`, 320);
+    const de = w2.document.documentElement;
+    log(de.scrollWidth > de.clientWidth + 5, `E03: horizontal scroll at 320px (${de.scrollWidth} > ${de.clientWidth})`);
+    return;
+  }
+  if (id === "E04") log(spacingClips(d, "#highlights li") > 0, "E04: text spacing clips highlight text");
+  if (id === "E05") {
+    d.querySelectorAll("div.swatch")[2].click();
+    log(d.getElementById("color-name").textContent === "Rust" && d.querySelectorAll("div.swatch")[2].tabIndex === -1, "E05: swatch works by mouse, not focusable");
+  }
+  if (id === "E06") {
+    d.getElementById("size-guide-btn").click();
+    const dlg = d.getElementById("size-dialog");
+    log(dlg.open && d.activeElement === dlg, "E06: size guide takes focus");
+    const tab = key(w, "Tab"); const esc = key(w, "Escape");
+    log(tab.defaultPrevented && esc.defaultPrevented && dlg.open, "E06: Tab and Escape blocked, dialog stays open");
+  }
+  if (id === "E07") {
+    d.getElementById("cart-btn").focus(); d.getElementById("cart-btn").click();
+    const dlg = d.getElementById("cart-dialog");
+    log(dlg.open && !dlg.matches(":modal") && d.activeElement.id === "cart-btn", "E07: cart opens but focus stays behind it");
+  }
+  if (id === "E08") {
+    d.getElementById("add-btn").dispatchEvent(new w.PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+    log(d.getElementById("cart-count").textContent === "1", "E08: item added on pointerdown, before release");
+    d.dispatchEvent(new w.PointerEvent("pointerup", { bubbles: true })); await sleep(20);
+    d.getElementById("buy-form").requestSubmit();
+    log(d.getElementById("cart-count").textContent === "2", "E08: keyboard submit still works");
+  }
+  if (id === "E20") {
+    const btn = d.getElementById("ripstop-btn"), tip = d.getElementById("ripstop-tip");
+    btn.dispatchEvent(new w.MouseEvent("mouseenter"));
+    log(!tip.hidden, "E20: tip shows on hover");
+    key(w, "Escape");
+    log(!tip.hidden, "E20: Escape does not dismiss");
+    const b = btn.getBoundingClientRect(), t = tip.getBoundingClientRect();
+    log(t.top - b.bottom >= 10, `E20: gap between trigger and tip (${Math.round(t.top - b.bottom)}px) so it is not hoverable`);
+    btn.dispatchEvent(new w.MouseEvent("mouseleave"));
+    log(tip.hidden, "E20: tip hides when pointer leaves trigger");
+  }
+}
+
+async function larkspurCorrect() {
+  let w = await load(`${L}?defects=none`); let d = w.document;
+  log(Object.values(LSIG).every(f => !f(d)), "Larkspur corrected: no signatures");
+  let rules = await axeRules(w); log(rules.length === 0, `Larkspur corrected: axe clean ${rules}`);
+  let cf = contrastFails(w); log(cf.length === 0, `Larkspur corrected: contrast ok ${cf}`);
+  log(spacingClips(d, "#highlights li") === 0, "Larkspur corrected: text spacing does not clip highlights");
+  d.querySelectorAll(".thumb")[1].click();
+  log(/side view/.test(d.getElementById("main-image").alt) && d.querySelectorAll(".thumb")[1].getAttribute("aria-pressed") === "true", "gallery updates image, alt and pressed state");
+  d.querySelector('input[value="Moss"]').click();
+  log(d.getElementById("color-name").textContent === "Moss", "color radio updates legend");
+  d.getElementById("qty-inc").click(); d.getElementById("qty-inc").click(); d.getElementById("qty-dec").click();
+  log(d.getElementById("qty").value === "2", "quantity stepper");
+  d.getElementById("buy-form").requestSubmit();
+  log(d.getElementById("cart-count").textContent === "2" && /Added 2 × .*Moss/.test(d.getElementById("cart-status").textContent), "add to cart updates count + status");
+  d.getElementById("add-btn").dispatchEvent(new w.PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+  log(d.getElementById("cart-count").textContent === "2", "pointerdown alone does not add");
+  d.getElementById("cart-btn").click();
+  const cart = d.getElementById("cart-dialog");
+  log(cart.matches(":modal") && cart.contains(d.activeElement), "cart dialog is modal and takes focus");
+  log(/Subtotal: \$142\.40/.test(d.getElementById("cart-total").textContent), "cart shows subtotal");
+  d.getElementById("cart-close").click(); await sleep(50);
+  log(!cart.open && d.activeElement.id === "cart-btn", "cart closes and returns focus");
+  d.getElementById("size-guide-btn").click();
+  const size = d.getElementById("size-dialog");
+  log(size.matches(":modal") && size.contains(d.activeElement), "size guide modal takes focus");
+  d.getElementById("size-close").click(); await sleep(50);
+  log(!size.open && d.activeElement.id === "size-guide-btn", "size guide closes and returns focus");
+  const btn = d.getElementById("ripstop-btn"), tip = d.getElementById("ripstop-tip");
+  btn.click();
+  log(!tip.hidden && btn.getAttribute("aria-expanded") === "true", "toggletip opens on click");
+  rules = await axeRules(w); log(rules.length === 0, `Larkspur corrected with tip open: axe clean ${rules}`);
+  cf = contrastFails(w); log(cf.length === 0, `Larkspur corrected with tip open: contrast ok ${cf}`);
+  key(w, "Escape");
+  log(tip.hidden && btn.getAttribute("aria-expanded") === "false", "Escape closes toggletip");
+  w = await load(`${L}?defects=none`, 320); d = w.document;
+  log(d.documentElement.scrollWidth <= d.documentElement.clientWidth + 1, `Larkspur corrected: no horizontal scroll at 320px (${d.documentElement.scrollWidth}/${d.documentElement.clientWidth})`);
+}
+
+/* ================= Cedar Valley ================= */
+const C = "scenarios/cedarvalley/index.html";
+const CSIG = {
+  F01: d => !d.getElementById("p-dob-hint"),
+  F02: d => !(d.getElementById("password").getAttribute("aria-describedby") || "").includes("password-hint"),
+  F03: d => d.querySelector('label[for="p-name"] .label-text').textContent === "Name",
+  F04: d => !d.querySelector(".reg-form .req"),
+  F08: d => !(d.getElementById("p-name").getAttribute("aria-describedby") || "").includes("error"),
+  F09: d => d.getElementById("reg-form").classList.contains("flat"),
+  F11: d => d.getElementById("terms").tagName === "SPAN",
+  F13: d => !d.getElementById("same-address"),
+  F14: d => d.getElementById("continue-btn").textContent === "Register and pay",
+  F15: d => !d.querySelector("#reg-form [autocomplete]"),
+  F16: d => d.getElementById("pw-toggle").classList.contains("icon-toggle"),
+  F17: d => d.getElementById("reg-form").classList.contains("faint"),
+  F18: d => d.documentElement.style.scrollPaddingBottom === "0px",
+  F19: d => /green button/.test(d.getElementById("finish-note").textContent),
+  F20: d => d.getElementById("reg-form").classList.contains("custom"),
+};
+function fillValid(d, overrides = {}) {
+  const vals = { "p-name": "Ana Silva", "p-dob": "27/03/1990", "p-email": "ana@example.com", "p-phone": "555-0100", "a-line1": "12 Elm Road", "a-city": "Cedar Valley", "a-postcode": "CV1 2AB", "e-name": "Rui Silva", "e-phone": "555-0199", "password": "summertime26", ...overrides };
+  for (const [k, v] of Object.entries(vals)) { const e = d.getElementById(k); if (e) e.value = v; }
+  d.getElementById("prog-swim").checked = true;
+  d.getElementById("addon-locker").checked = true;
+  for (const k of ["b-line1", "b-city", "b-postcode"]) { const e = d.getElementById(k); if (e && !d.getElementById("billing-fields").hidden) e.value = vals[k] || "x"; }
+  const t = d.getElementById("terms"); if (t.tagName === "INPUT") t.checked = true; else t.classList.add("is-checked");
+  d.getElementById("reg-form").dispatchEvent(new Event("change"));
+}
+const submit = (d) => d.getElementById("reg-form").requestSubmit();
+// Mimics tabbing down the form: the next field is already inside the viewport, in the strip the fixed bar covers.
+function obscured(d, id) {
+  const el = d.getElementById(id); const w = d.defaultView;
+  w.scrollTo(0, el.getBoundingClientRect().top + w.scrollY - (w.innerHeight - el.offsetHeight - 8));
+  el.focus();
+  const r = el.getBoundingClientRect(), bar = d.getElementById("fee-bar").getBoundingClientRect();
+  return r.top >= bar.top && r.bottom <= bar.bottom;
+}
+
+async function cedarBehaviour(w, id) {
+  const d = w.document;
+  if (id === "F05") {
+    fillValid(d); d.getElementById("prog-swim").checked = false; submit(d);
+    log(d.getElementById("program-group").classList.contains("invalid-color") && d.getElementById("program-error").hidden && d.getElementById("error-summary").hidden && !d.getElementById("review").hidden === false, "F05: missing program shown only by red legend");
+  }
+  if (id === "F06") {
+    fillValid(d, { "p-dob": "1990-03-27", "p-email": "ana@", password: "short" }); submit(d);
+    const msgs = ["p-dob", "p-email", "password"].map(k => d.getElementById(`${k}-error`).textContent);
+    log(msgs.join("|") === "Invalid date of birth.|Invalid email address.|Invalid password.", `F06: messages give no suggestion (${msgs.join(" | ")})`);
+  }
+  if (id === "F07") {
+    d.getElementById("continue-btn").focus(); submit(d);
+    log(!d.getElementById("error-summary").hidden && d.activeElement.id === "continue-btn" && !d.getElementById("error-summary").hasAttribute("role"), "F07: summary appears but focus stays and nothing announces it");
+  }
+  if (id === "F08") {
+    submit(d); const i = d.getElementById("p-email");
+    log(!d.getElementById("p-email-error").hidden && !i.hasAttribute("aria-invalid") && !(i.getAttribute("aria-describedby") || "").includes("error"), "F08: inline error visible but not linked or flagged");
+  }
+  if (id === "F10") {
+    const r = d.getElementById("prog-pottery"); r.focus(); r.click();
+    log(d.activeElement.id === "addon-rental", "F10: choosing a program moves focus");
+  }
+  if (id === "F11") {
+    log(d.getElementById("terms").tabIndex === -1 && !d.getElementById("terms").hasAttribute("role"), "F11: terms control not focusable, no role");
+    d.getElementById("terms-row").click();
+    log(d.getElementById("terms").classList.contains("is-checked"), "F11: works with the mouse");
+  }
+  if (id === "F13") {
+    fillValid(d); for (const k of ["b-line1", "b-city", "b-postcode"]) d.getElementById(k).value = ""; submit(d);
+    log(!d.getElementById("b-line1-error").hidden, "F13: billing address must be retyped");
+  }
+  if (id === "F14") {
+    fillValid(d); submit(d);
+    log(!d.getElementById("done").hidden && d.getElementById("review").hidden && /charged/.test(d.getElementById("done-text").textContent), "F14: valid submit charges with no review step");
+  }
+  if (id === "F16") {
+    const b = d.getElementById("pw-toggle"); b.click();
+    log(d.getElementById("password").type === "text" && b.getAttribute("aria-label") === "Show password" && !b.hasAttribute("aria-pressed"), "F16: toggle state change not exposed");
+  }
+  if (id === "F18") log(obscured(d, "b-line1") || obscured(d, "password") || obscured(d, "e-phone"), "F18: a focused field is fully hidden behind the fee bar");
+}
+
+async function cedarCorrect() {
+  let w = await load(`${C}?defects=none`); let d = w.document;
+  log(Object.values(CSIG).every(f => !f(d)), "Cedar corrected: no signatures");
+  let rules = await axeRules(w); log(rules.length === 0, `Cedar corrected: axe clean ${rules}`);
+  let cf = contrastFails(w); log(cf.length === 0, `Cedar corrected: contrast ok ${cf}`);
+  d.getElementById("continue-btn").focus(); submit(d);
+  const items = d.querySelectorAll("#error-list li");
+  log(!d.getElementById("error-summary").hidden && d.activeElement.id === "error-summary" && items.length === 12, `empty submit: summary focused with 12 errors (${items.length})`);
+  log(d.getElementById("p-email").getAttribute("aria-invalid") === "true" && (d.getElementById("p-email").getAttribute("aria-describedby")).includes("p-email-error") && !d.getElementById("program-error").hidden, "inline errors linked, flagged, program error in text");
+  rules = await axeRules(w); log(rules.length === 0, `Cedar corrected with errors: axe clean ${rules}`);
+  cf = contrastFails(w); log(cf.length === 0, `Cedar corrected with errors: contrast ok ${cf}`);
+  items[4].querySelector("a").click();
+  log(d.activeElement.id === "a-line1", "summary link moves focus to field");
+  d.getElementById("prog-pottery").focus(); d.getElementById("prog-pottery").click();
+  log(d.activeElement.id === "prog-pottery", "choosing program keeps focus");
+  log(d.getElementById("fee-total").textContent === "$120.00", "fee updates");
+  fillValid(d, { "p-dob": "1990-03-27", "p-email": "ana@", password: "short" }); submit(d);
+  log(/DD\/MM\/YYYY/.test(d.getElementById("p-dob-error").textContent) && /name@example.com/.test(d.getElementById("p-email-error").textContent) && /10 characters/.test(d.getElementById("password-error").textContent), "format errors suggest a fix");
+  log(!obscured(d, "b-line1") && !obscured(d, "password") && !obscured(d, "e-phone"), "focused fields not hidden behind the fee bar");
+  d.getElementById("same-address").click();
+  log(!d.getElementById("billing-fields").hidden, "unchecking same-address shows billing fields");
+  d.getElementById("same-address").click();
+  d.getElementById("pw-toggle").click();
+  log(d.getElementById("password").type === "text" && d.getElementById("pw-toggle").textContent === "Hide password", "password toggle name reflects state");
+  fillValid(d); submit(d);
+  log(!d.getElementById("review").hidden && d.activeElement.id === "review-heading" && /\$105\.00/.test(d.getElementById("confirm-btn").textContent), "valid submit shows review with total");
+  log(d.getElementById("error-summary").hidden && d.getElementById("fee-bar").hidden, "summary and fee bar hidden on review");
+  rules = await axeRules(w); log(rules.length === 0, `Cedar review: axe clean ${rules}`);
+  d.getElementById("edit-btn").click();
+  log(!d.getElementById("reg-form").hidden && d.activeElement.id === "p-name", "edit returns to form");
+  submit(d); d.getElementById("confirm-btn").click();
+  log(!d.getElementById("done").hidden && d.activeElement.id === "done-heading", "confirm completes registration");
+  w = await load(`${C}?defects=none`, 320); d = w.document;
+  log(d.documentElement.scrollWidth <= d.documentElement.clientWidth + 1, "Cedar corrected: no horizontal scroll at 320px");
+}
+
+/* ================= Runner ================= */
+async function singles(name, page, attempt, SIG, behaviour) {
+  for (const id of attempt.ALL) {
+    const w = await load(`${page}?defects=${id}`); const d = w.document;
+    const present = Object.entries(SIG).filter(([, f]) => f(d)).map(([k]) => k);
+    log(present.join() === (SIG[id] ? id : ""), `${id} alone: signatures ${present.join(",") || "none"}`);
+    const rules = await axeRules(w);
+    const cf = contrastFails(w);
+    info(`${id} alone: axe ${rules.join(",") || "none"} | contrast ${cf.join(",") || "none"}`);
+    await behaviour(w, id);
+  }
+  const w = await load(`${page}?defects=all`); const d = w.document;
+  log(Object.values(SIG).every(f => f(d)), `${name} all defects: every signature present`);
+  info(`${name} all defects: axe ${(await axeRules(w)).join(",")} | contrast ${contrastFails(w).join(",")}`);
+  let agree = true;
+  for (let i = 0; i < 5; i++) {
+    const code = A11yAttempt.newCode(); const set = attempt.pick(code);
+    const w2 = await load(`${page}?attempt=${code}`);
+    const present = Object.entries(SIG).filter(([, f]) => f(w2.document)).map(([k]) => k);
+    if (present.join() !== set.filter(id => SIG[id]).join()) { agree = false; info(`mismatch ${code}`); }
+  }
+  log(agree, `${name}: page applies exactly the picked defects for 5 random codes`);
+}
+
+(async () => {
+  try {
+    const LA = A11yAttempt.get("larkspur"), CA = A11yAttempt.get("cedarvalley");
+    log(LA.ALL.length === 20 && CA.ALL.length === 20, "both pools have 20 defects");
+    if (!ONLY || ONLY === "larkspur") { await larkspurCorrect(); await singles("Larkspur", L, LA, LSIG, larkspurBehaviour); }
+    if (!ONLY || ONLY === "cedar") { await cedarCorrect(); await singles("Cedar", C, CA, CSIG, cedarBehaviour); }
+  } catch (e) {
+    log(false, `harness exception: ${e.stack}`);
+  }
+  log(errors.length === 0, `no page JS errors ${errors.join("; ")}`);
+  new Image().src = "/__results?" + encodeURIComponent(out.join("\n"));
+  const report = document.createElement("pre"); report.id = "report"; report.textContent = out.join("\n"); document.body.prepend(report);
+})();
+</script>
+</body></html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register for a summer program | Cedar Valley Recreation Center</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">Cedar Valley <span>Recreation Center</span></a>
+      <nav aria-label="Main">
+        <ul class="site-nav">
+          <li><a href="#program-group">Programs</a></li>
+          <li><a href="#help">Help</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div class="container narrow">
+      <h1>Register for a summer program</h1>
+      <p id="required-note">Fields marked (required) must be completed.</p>
+      <p id="finish-note">When you have finished, select Continue to review. You can check everything before you pay.</p>
+
+      <div class="error-summary" id="error-summary" tabindex="-1" hidden>
+        <h2 id="error-summary-title">There is a problem</h2>
+        <ul id="error-list"></ul>
+      </div>
+
+      <form id="reg-form" class="reg-form" novalidate>
+        <h2>Participant</h2>
+        <div class="field">
+          <label for="p-name"><span class="label-text">Participant’s full name</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="p-name-error" hidden></p>
+          <input id="p-name" name="p-name" type="text" autocomplete="name" aria-describedby="p-name-error">
+        </div>
+        <div class="field">
+          <label for="p-dob"><span class="label-text">Date of birth</span> <span class="req">(required)</span></label>
+          <p class="hint" id="p-dob-hint">Use the format DD/MM/YYYY, for example 27/03/1990.</p>
+          <p class="field-error" id="p-dob-error" hidden></p>
+          <input id="p-dob" name="p-dob" type="text" inputmode="numeric" autocomplete="bday" aria-describedby="p-dob-hint p-dob-error">
+        </div>
+        <div class="field">
+          <label for="p-email"><span class="label-text">Email address</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="p-email-error" hidden></p>
+          <input id="p-email" name="p-email" type="email" autocomplete="email" aria-describedby="p-email-error">
+        </div>
+        <div class="field">
+          <label for="p-phone"><span class="label-text">Participant’s phone number</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="p-phone-error" hidden></p>
+          <input id="p-phone" name="p-phone" type="tel" autocomplete="tel" aria-describedby="p-phone-error">
+        </div>
+
+        <h2>Home address</h2>
+        <div class="field">
+          <label for="a-line1"><span class="label-text">Address line 1</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="a-line1-error" hidden></p>
+          <input id="a-line1" name="a-line1" type="text" autocomplete="address-line1" aria-describedby="a-line1-error">
+        </div>
+        <div class="field">
+          <label for="a-city"><span class="label-text">Town or city</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="a-city-error" hidden></p>
+          <input id="a-city" name="a-city" type="text" autocomplete="address-level2" aria-describedby="a-city-error">
+        </div>
+        <div class="field">
+          <label for="a-postcode"><span class="label-text">Postcode</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="a-postcode-error" hidden></p>
+          <input id="a-postcode" name="a-postcode" type="text" autocomplete="postal-code" class="input-short" aria-describedby="a-postcode-error">
+        </div>
+
+        <h2>Emergency contact</h2>
+        <div class="field">
+          <label for="e-name"><span class="label-text">Emergency contact’s full name</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="e-name-error" hidden></p>
+          <input id="e-name" name="e-name" type="text" aria-describedby="e-name-error">
+        </div>
+        <div class="field">
+          <label for="e-phone"><span class="label-text">Emergency contact’s phone number</span> <span class="req">(required)</span></label>
+          <p class="field-error" id="e-phone-error" hidden></p>
+          <input id="e-phone" name="e-phone" type="tel" aria-describedby="e-phone-error">
+        </div>
+
+        <h2>Program</h2>
+        <fieldset class="group" id="program-group" aria-describedby="program-error">
+          <legend><span class="label-text">Choose a program</span> <span class="req">(required)</span></legend>
+          <p class="field-error" id="program-error" hidden></p>
+          <div class="choice">
+            <input type="radio" id="prog-pottery" name="program" value="pottery" data-price="120" data-label="Pottery basics">
+            <label for="prog-pottery">Pottery basics, Mondays 6–8 pm ($120)</label>
+          </div>
+          <div class="choice">
+            <input type="radio" id="prog-swim" name="program" value="swim" data-price="95" data-label="Beginner swimming">
+            <label for="prog-swim">Beginner swimming, Wednesdays 7–8 pm ($95)</label>
+          </div>
+          <div class="choice">
+            <input type="radio" id="prog-trail" name="program" value="trail" data-price="60" data-label="Trail running club">
+            <label for="prog-trail">Trail running club, Saturdays 8–10 am ($60)</label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group" id="addons-group">
+          <legend>Add-ons (optional)</legend>
+          <div class="choice">
+            <input type="checkbox" id="addon-rental" name="addons" value="rental" data-price="15" data-label="Equipment rental">
+            <label for="addon-rental">Equipment rental (+$15)</label>
+          </div>
+          <div class="choice">
+            <input type="checkbox" id="addon-locker" name="addons" value="locker" data-price="10" data-label="Locker for the season">
+            <label for="addon-locker">Locker for the season (+$10)</label>
+          </div>
+        </fieldset>
+
+        <h2>Billing address</h2>
+        <div class="choice" id="same-address-row">
+          <input type="checkbox" id="same-address" checked>
+          <label for="same-address">Billing address is the same as my home address</label>
+        </div>
+        <div id="billing-fields" hidden>
+          <div class="field">
+            <label for="b-line1"><span class="label-text">Billing address line 1</span> <span class="req">(required)</span></label>
+            <p class="field-error" id="b-line1-error" hidden></p>
+            <input id="b-line1" name="b-line1" type="text" autocomplete="billing address-line1" aria-describedby="b-line1-error">
+          </div>
+          <div class="field">
+            <label for="b-city"><span class="label-text">Billing town or city</span> <span class="req">(required)</span></label>
+            <p class="field-error" id="b-city-error" hidden></p>
+            <input id="b-city" name="b-city" type="text" autocomplete="billing address-level2" aria-describedby="b-city-error">
+          </div>
+          <div class="field">
+            <label for="b-postcode"><span class="label-text">Billing postcode</span> <span class="req">(required)</span></label>
+            <p class="field-error" id="b-postcode-error" hidden></p>
+            <input id="b-postcode" name="b-postcode" type="text" autocomplete="billing postal-code" class="input-short" aria-describedby="b-postcode-error">
+          </div>
+        </div>
+
+        <h2>Create an account</h2>
+        <p>You will use your email address and this password to manage your bookings.</p>
+        <div class="field">
+          <label for="password"><span class="label-text">Password</span> <span class="req">(required)</span></label>
+          <p class="hint" id="password-hint">At least 10 characters, including at least one number.</p>
+          <p class="field-error" id="password-error" hidden></p>
+          <div class="password-row">
+            <input id="password" name="password" type="password" autocomplete="new-password" aria-describedby="password-hint password-error">
+            <button type="button" class="btn btn-secondary" id="pw-toggle">Show password</button>
+          </div>
+        </div>
+
+        <h2>Terms</h2>
+        <p class="field-error" id="terms-error" hidden></p>
+        <div class="choice" id="terms-row">
+          <input type="checkbox" id="terms" aria-describedby="terms-error">
+          <label for="terms">I agree to the program terms and the cancellation policy <span class="req">(required)</span></label>
+        </div>
+      </form>
+
+      <section class="review" id="review" aria-labelledby="review-heading" hidden>
+        <h2 id="review-heading" tabindex="-1">Check your registration</h2>
+        <p>Make sure everything is correct before you pay.</p>
+        <dl class="review-list" id="review-list"></dl>
+        <p class="review-total" id="review-total"></p>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" id="edit-btn">Edit registration</button>
+          <button type="button" class="btn btn-primary" id="confirm-btn">Confirm and pay</button>
+        </div>
+      </section>
+
+      <section class="done" id="done" aria-labelledby="done-heading" hidden>
+        <h2 id="done-heading" tabindex="-1">Registration complete</h2>
+        <p id="done-text"></p>
+      </section>
+
+      <section class="help" id="help" aria-labelledby="help-heading">
+        <h2 id="help-heading">Need help?</h2>
+        <p>Call the front desk on 555-0142 (Monday to Friday, 8 am to 8 pm) or email <a href="mailto:programs@cedarvalley.example">programs@cedarvalley.example</a>.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 Cedar Valley Recreation Center. A fictional organization created for accessibility training.</p>
+    </div>
+  </footer>
+
+  <div class="fee-bar" id="fee-bar">
+    <div class="container fee-inner">
+      <p class="fee">Total fee: <strong id="fee-total">$0.00</strong></p>
+      <button type="submit" form="reg-form" class="btn btn-primary" id="continue-btn">Continue to review</button>
+    </div>
+  </div>
+
+  <script src="../shared/attempt-engine.js"></script>
+  <script src="attempt.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

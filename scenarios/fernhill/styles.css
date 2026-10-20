@@ -120,7 +120,7 @@ a {
   text-decoration: underline;
 }
 
-.site-nav a:focus {
+.site-nav.nav-minimal a:focus {
   outline: none;
 }
 
@@ -195,7 +195,8 @@ a {
 }
 
 .section h2,
-.section-title {
+.section-title,
+.section-title-small {
   margin: 0 0 1rem;
   font-size: 2rem;
   font-weight: 700;
@@ -239,8 +240,39 @@ a {
   gap: 0.5rem;
 }
 
-.legend .dot-no {
+.legend .dot-no,
+.legend .mark-no {
   margin-left: 1rem;
+}
+
+.mark {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mark-yes {
+  stroke: #1f7a4a;
+}
+
+.mark-no {
+  stroke: #6b7570;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .dot {
@@ -287,6 +319,10 @@ a {
 .fine-print {
   margin-top: 1rem;
   font-size: 0.875rem;
+  color: #5f6863;
+}
+
+.fine-print.muted {
   color: #a8a8a8;
 }
 
@@ -295,6 +331,12 @@ a {
   display: block;
   margin-top: 2rem;
   border-radius: 12px;
+}
+
+.testimonials {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
 }
 
 .testimonial {
@@ -352,11 +394,29 @@ details p {
   font-weight: 600;
 }
 
-.field input {
+.field input,
+.field select {
   padding: 0.75rem;
   border: 1px solid #6b7570;
   border-radius: 6px;
+  background: #ffffff;
+  color: #1d2420;
   font: inherit;
+}
+
+.tour-form.subtle input,
+.tour-form.subtle select {
+  border-color: #dde2df;
+}
+
+.field input.invalid {
+  border: 2px solid #b3261e;
+}
+
+.field-error {
+  margin: 0;
+  font-weight: 600;
+  color: #b3261e;
 }
 
 .field input::placeholder {
@@ -400,6 +460,43 @@ details p {
 .footer-links a {
   display: inline-block;
   padding-block: 0.25rem;
+}
+
+.social {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.social a {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #8a978f;
+  border-radius: 6px;
+}
+
+.social svg {
+  width: 22px;
+  height: 22px;
+}
+
+.social.compact {
+  gap: 4px;
+}
+
+.social.compact a {
+  width: 16px;
+  height: 16px;
+  border: 0;
+}
+
+.social.compact svg {
+  width: 14px;
+  height: 14px;
 }
 
 .copyright {
