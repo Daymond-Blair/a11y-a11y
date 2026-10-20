@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accessibility Audit Training Lab</title>
+  <meta name="description" content="Practice WCAG 2.2 accessibility audits against a page with known, intentionally injected violations.">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="app-header">
+    <div class="wrap header-inner">
+      <p class="brand"><span class="brand-mark" aria-hidden="true">A11y</span> Audit Training Lab</p>
+      <button type="button" class="btn btn-ghost" id="reset-btn">Reset audit</button>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div class="wrap">
+      <h1>Accessibility audit</h1>
+      <p class="intro">Open the audit site in a new tab, test it with your usual tools, and log each WCAG 2.2 Level A or AA failure you find. When you submit, the answer key is revealed so you can compare your results.</p>
+
+      <noscript><p class="notice">This training app needs JavaScript. The audit site itself works without it.</p></noscript>
+      <p class="notice notice-error" id="load-error" hidden></p>
+
+      <section class="panel scenario" aria-labelledby="scenario-title">
+        <div class="scenario-head">
+          <div>
+            <p class="eyebrow">Audit scenario</p>
+            <h2 id="scenario-title">Loading scenario…</h2>
+          </div>
+          <p class="badge" id="audit-state">In progress</p>
+        </div>
+        <p id="scenario-summary"></p>
+        <dl class="meta" id="scenario-meta"></dl>
+        <p id="scenario-scope" class="muted"></p>
+        <a class="btn btn-primary" id="launch-link" href="#" target="_blank" rel="noopener">
+          Launch audit site<span class="visually-hidden"> (opens in a new tab)</span>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3H3v10h10v-3M9 2h5v5M14 2L7 9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </a>
+      </section>
+
+      <div class="workspace">
+        <section class="panel" id="finding-form-panel" aria-labelledby="form-heading">
+          <h2 id="form-heading" tabindex="-1">Log a finding</h2>
+          <form id="finding-form" novalidate>
+            <p class="muted">Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
+
+            <div class="field">
+              <label for="f-location">Element or location <span class="req" aria-hidden="true">*</span></label>
+              <p class="hint" id="f-location-hint">For example: “Header navigation links” or “#signup-form email input”.</p>
+              <input type="text" id="f-location" name="location" required aria-describedby="f-location-hint f-location-error" autocomplete="off">
+              <p class="error" id="f-location-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-description">Issue description <span class="req" aria-hidden="true">*</span></label>
+              <p class="hint" id="f-description-hint">What fails, who it affects and how you found it.</p>
+              <textarea id="f-description" name="description" rows="4" required aria-describedby="f-description-hint f-description-error"></textarea>
+              <p class="error" id="f-description-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="f-wcag">WCAG success criterion (optional)</label>
+              <select id="f-wcag" name="wcag" aria-describedby="f-wcag-help">
+                <option value="">Not specified</option>
+              </select>
+              <div class="criterion-help" id="f-wcag-help"></div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="save-btn">Add finding</button>
+              <button type="button" class="btn btn-secondary" id="cancel-edit-btn" hidden>Cancel edit</button>
+            </div>
+          </form>
+          <p class="notice" id="form-locked" hidden>This audit has been submitted, so findings are read-only. Reset the audit to start again.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="findings-heading">
+          <h2 id="findings-heading" tabindex="-1">Findings <span class="count" id="findings-count">(0)</span></h2>
+          <p class="muted" id="findings-empty">No findings logged yet.</p>
+          <ol class="findings" id="findings-list"></ol>
+        </section>
+      </div>
+
+      <section class="panel submit-panel" id="submit-panel" aria-labelledby="submit-heading">
+        <h2 id="submit-heading">Submit audit</h2>
+        <p>Submitting locks your findings and reveals the answer key. You can then mark which known violations you identified.</p>
+        <button type="button" class="btn btn-primary" id="submit-btn">Submit audit and reveal answer key</button>
+      </section>
+
+      <section class="panel results" id="results" aria-labelledby="results-heading" hidden>
+        <h2 id="results-heading" tabindex="-1">Results</h2>
+        <div class="score" id="score" aria-live="polite" aria-atomic="true"></div>
+        <p>For each known violation below, compare it with your findings and tick the box if you identified it. Your findings that cite the same criterion are listed as possible matches.</p>
+
+        <h3>Answer key</h3>
+        <ol class="answer-key" id="answer-key"></ol>
+
+        <div class="summary-grid">
+          <div>
+            <h3 id="identified-heading">Identified</h3>
+            <ul class="summary-list" id="identified-list" aria-labelledby="identified-heading"></ul>
+          </div>
+          <div>
+            <h3 id="missed-heading">Missed</h3>
+            <ul class="summary-list" id="missed-list" aria-labelledby="missed-heading"></ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <p>Criteria reference: <a href="https://www.w3.org/TR/WCAG22/">WCAG 2.2 (W3C Recommendation)</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/">Understanding WCAG 2.2</a>. Findings are stored only in this browser.</p>
+    </div>
+  </footer>
+
+  <div class="visually-hidden" id="announcer" role="status" aria-live="polite"></div>
+</body>
+</html>

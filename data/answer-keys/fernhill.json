@@ -1,0 +1,115 @@
+{
+  "scenario": "fernhill",
+  "violations": [
+    {
+      "id": "V01",
+      "title": "Page language not declared",
+      "wcag": "3.1.1",
+      "related_wcag": [],
+      "element": "<html> element",
+      "selector": "html",
+      "description": "The html element has no lang attribute, so screen readers cannot determine which language and pronunciation rules to use for the page.",
+      "how_to_find": "Inspect the root element in DevTools or view source. Automated checkers (axe, WAVE) flag this as html-has-lang.",
+      "fix": "Add lang=\"en\" to the html element."
+    },
+    {
+      "id": "V02",
+      "title": "Announcement banner close button has no accessible name",
+      "wcag": "4.1.2",
+      "related_wcag": ["1.1.1"],
+      "element": "Announcement banner, close (×) button at the top of the page",
+      "selector": "#announcement-close",
+      "description": "The close button contains only an SVG icon with no text, aria-label or title. Screen readers announce it as just \"button\", giving no indication of its purpose.",
+      "how_to_find": "Tab to the button with a screen reader running, or check its computed name in the DevTools Accessibility pane (empty).",
+      "fix": "Add aria-label=\"Close announcement\" to the button and aria-hidden=\"true\" to the SVG."
+    },
+    {
+      "id": "V03",
+      "title": "Main navigation links have no visible focus indicator",
+      "wcag": "2.4.7",
+      "related_wcag": [],
+      "element": "Header navigation links (Spaces, Plans, Community, FAQ, Contact)",
+      "selector": ".site-nav a",
+      "description": "The stylesheet sets outline: none on navigation links with no replacement focus style, so keyboard users cannot see which link has focus.",
+      "how_to_find": "Tab from the top of the page into the main navigation and watch for a focus indicator. Inspect the CSS rule .site-nav a:focus.",
+      "fix": "Remove outline: none or provide a clearly visible :focus-visible style (e.g. a 2px outline with 3:1 contrast)."
+    },
+    {
+      "id": "V04",
+      "title": "\"Book a free tour\" button is not keyboard operable",
+      "wcag": "2.1.1",
+      "related_wcag": ["4.1.2"],
+      "element": "Hero section, \"Book a free tour\" call-to-action",
+      "selector": "#tour-cta",
+      "description": "The primary call to action is a div with a click handler. It has no tabindex, button role or key handling, so keyboard users cannot reach or activate it, and screen readers do not expose it as a button.",
+      "how_to_find": "Tab through the hero: focus moves from the navigation straight to \"See plans and pricing\", skipping the tour button. Inspect the element to see it is a div.",
+      "fix": "Use a native <a href=\"#tour\"> or <button> element instead of a div."
+    },
+    {
+      "id": "V05",
+      "title": "Section headings are styled text, not heading elements",
+      "wcag": "1.3.1",
+      "related_wcag": ["2.4.6"],
+      "element": "\"Membership plans\" and \"What members say\" section titles",
+      "selector": ".section-title",
+      "description": "Two section titles look like headings but are div elements. They are missing from the heading structure, so screen reader users navigating by heading skip the pricing and testimonial content.",
+      "how_to_find": "Open a screen reader headings list (NVDA Insert+F7, VoiceOver rotor) or a headings bookmarklet and compare it with the visual headings.",
+      "fix": "Mark up \"Membership plans\" as an h2 and \"What members say\" as an h3 (or h2)."
+    },
+    {
+      "id": "V06",
+      "title": "Plan features indicated by color alone",
+      "wcag": "1.4.1",
+      "related_wcag": ["1.1.1", "1.3.1"],
+      "element": "Membership plans comparison table and its legend",
+      "selector": ".plans-table .dot",
+      "description": "Whether a feature is included is shown only by green or red dots of identical shape. Users who cannot distinguish red from green cannot read the table, and the empty spans give screen readers no information at all.",
+      "how_to_find": "View the table in grayscale or with a color-blindness simulator; then read it with a screen reader and note the empty data cells.",
+      "fix": "Add text or distinct icons with text alternatives in each cell, e.g. a check mark with visually hidden \"Included\" and a dash with \"Not included\"."
+    },
+    {
+      "id": "V07",
+      "title": "Pricing fine print has insufficient contrast",
+      "wcag": "1.4.3",
+      "related_wcag": [],
+      "element": "Fine print below the plans table (\"Prices exclude sales tax…\")",
+      "selector": ".fine-print",
+      "description": "Small grey text (#a8a8a8) on the light green section background (#f3f7f5) has a contrast ratio of about 2.2:1, well below the 4.5:1 minimum for normal-size text.",
+      "how_to_find": "Measure the text with a contrast analyzer or the DevTools color picker.",
+      "fix": "Darken the text to at least #5f6863 (about 5.5:1 on this background)."
+    },
+    {
+      "id": "V08",
+      "title": "Infographic image has no text alternative",
+      "wcag": "1.1.1",
+      "related_wcag": [],
+      "element": "Our community section, membership statistics graphic",
+      "selector": "img.stats",
+      "description": "The statistics graphic (1,200+ active members, 94% renew each year, 60+ events per year) has no alt attribute. The figures are not available anywhere else on the page, and screen readers may announce the file name instead.",
+      "how_to_find": "Inspect images in DevTools or use an image-alt checker; listen with a screen reader as you reach the Community section.",
+      "fix": "Add alt=\"1,200+ active members, 94% renew each year, 60+ events per year\", or present the figures as HTML text."
+    },
+    {
+      "id": "V09",
+      "title": "Testimonials rotate automatically with no way to pause",
+      "wcag": "2.2.2",
+      "related_wcag": [],
+      "element": "\"What members say\" testimonials",
+      "selector": "#testimonials",
+      "description": "The testimonials change every 5 seconds indefinitely. There is no pause, stop or hide control, which distracts users with attention disorders and leaves slow readers and screen magnifier users unable to finish a quote.",
+      "how_to_find": "Watch the testimonial area for more than five seconds and look for a pause control.",
+      "fix": "Add a visible, keyboard-operable Pause button, stop rotation on hover and focus, or show all testimonials statically."
+    },
+    {
+      "id": "V10",
+      "title": "Email and phone fields use placeholders instead of labels",
+      "wcag": "3.3.2",
+      "related_wcag": ["1.3.1", "4.1.2"],
+      "element": "\"Book a free tour\" form, email and phone inputs",
+      "selector": "#email, #phone",
+      "description": "The email and phone inputs have no label element. The placeholder text disappears as soon as the user starts typing, leaving no persistent label, and the fields rely on placeholder fallback for their accessible names.",
+      "how_to_find": "Inspect the form fields for associated label elements; type into a field and observe the instruction disappear.",
+      "fix": "Add visible <label for=\"email\">Email address</label> and <label for=\"phone\">Phone number</label> elements, matching the other fields."
+    }
+  ]
+}

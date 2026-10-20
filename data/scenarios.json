@@ -1,0 +1,14 @@
+{
+  "scenarios": [
+    {
+      "id": "fernhill",
+      "title": "Fernhill Coworking landing page",
+      "summary": "Marketing landing page for a fictional coworking space, with navigation, a hero call to action, a pricing comparison table, testimonials, an FAQ and a tour booking form.",
+      "url": "scenarios/fernhill/index.html",
+      "answer_key": "data/answer-keys/fernhill.json",
+      "violation_count": 10,
+      "standard": "WCAG 2.2 Level A and AA",
+      "scope": "Single page. Test it as you would a client page: keyboard, screen reader, visual and code inspection, plus any automated tools you normally use."
+    }
+  ]
+}

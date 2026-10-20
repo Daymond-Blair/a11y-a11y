@@ -1,0 +1,668 @@
+{
+  "version": "WCAG 2.2",
+  "source": "https://www.w3.org/TR/WCAG22/",
+  "understanding": "https://www.w3.org/WAI/WCAG22/Understanding/",
+  "notes": "All Level A and AA success criteria in WCAG 2.2. Level AAA and 4.1.1 Parsing (obsolete and removed) are excluded. Definitions are concise paraphrases of the normative text; consult the W3C source for exceptions and exact wording.",
+  "criteria": [
+    {
+      "id": "1.1.1",
+      "name": "Non-text Content",
+      "level": "A",
+      "definition": "All non-text content presented to the user has a text alternative that serves the equivalent purpose. Controls and inputs have a name describing their purpose; decorative content is implemented so assistive technology can ignore it.",
+      "testing_technique": "Inspect every img, svg, canvas, icon font, image button and CSS-generated meaningful image. Confirm informative images have an accurate alt or accessible name, and decorative images use alt=\"\" or aria-hidden=\"true\". Verify with a screen reader or the accessibility tree.",
+      "failures": [
+        "Informative img element with no alt attribute",
+        "Alt text that is a file name or placeholder such as \"image1.png\"",
+        "Decorative image announced with redundant or meaningless text",
+        "Chart or infographic with no text equivalent of its data"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html"
+    },
+    {
+      "id": "1.2.1",
+      "name": "Audio-only and Video-only (Prerecorded)",
+      "level": "A",
+      "definition": "Prerecorded audio-only content has a text alternative presenting equivalent information, and prerecorded video-only content has either a text alternative or an audio track presenting equivalent information.",
+      "testing_technique": "Identify audio-only files (e.g. podcasts) and silent video. Confirm a transcript or equivalent audio/text alternative is provided and is easy to locate.",
+      "failures": [
+        "Podcast episode with no transcript",
+        "Silent product demo video with no text or audio description of what is shown"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/audio-only-and-video-only-prerecorded.html"
+    },
+    {
+      "id": "1.2.2",
+      "name": "Captions (Prerecorded)",
+      "level": "A",
+      "definition": "Captions are provided for all prerecorded audio content in synchronized media, except when the media is a clearly labeled alternative for text.",
+      "testing_technique": "Play each prerecorded video with audio. Turn captions on and confirm they exist, are synchronized, and include dialogue, speaker identification and meaningful sound effects.",
+      "failures": [
+        "Video with spoken audio and no captions",
+        "Auto-generated captions with significant errors left uncorrected",
+        "Captions omit important non-speech audio"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/captions-prerecorded.html"
+    },
+    {
+      "id": "1.2.3",
+      "name": "Audio Description or Media Alternative (Prerecorded)",
+      "level": "A",
+      "definition": "An alternative for time-based media or audio description of the prerecorded video content is provided for synchronized media, except when the media is a clearly labeled alternative for text.",
+      "testing_technique": "Watch the video with the screen hidden. If important visual information is not conveyed by the existing audio, confirm an audio-described version or a full descriptive text alternative is available.",
+      "failures": [
+        "Video conveys on-screen text or actions that are never spoken and no description or alternative is provided"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/audio-description-or-media-alternative-prerecorded.html"
+    },
+    {
+      "id": "1.2.4",
+      "name": "Captions (Live)",
+      "level": "AA",
+      "definition": "Captions are provided for all live audio content in synchronized media.",
+      "testing_technique": "For live streams or webinars, confirm real-time captions (human or quality-checked automated) are available and synchronized with the audio.",
+      "failures": [
+        "Live webinar or stream with spoken content and no captions"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/captions-live.html"
+    },
+    {
+      "id": "1.2.5",
+      "name": "Audio Description (Prerecorded)",
+      "level": "AA",
+      "definition": "Audio description is provided for all prerecorded video content in synchronized media.",
+      "testing_technique": "Identify visual information not conveyed by the main audio track. Confirm an audio description track or described version of the video is provided.",
+      "failures": [
+        "Video relies on visual-only information and only a transcript (no audio description) is provided"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/audio-description-prerecorded.html"
+    },
+    {
+      "id": "1.3.1",
+      "name": "Info and Relationships",
+      "level": "A",
+      "definition": "Information, structure, and relationships conveyed through presentation can be programmatically determined or are available in text.",
+      "testing_technique": "Review headings, lists, tables, form groupings and landmarks in the accessibility tree or with a screen reader. Confirm visual structure (e.g. text styled as a heading) uses the matching semantic markup.",
+      "failures": [
+        "Visual headings built from styled div or span elements instead of h1–h6",
+        "Data table without th elements or header associations",
+        "Related radio buttons without a fieldset and legend",
+        "Lists created with line breaks and bullet characters instead of ul/ol"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html"
+    },
+    {
+      "id": "1.3.2",
+      "name": "Meaningful Sequence",
+      "level": "A",
+      "definition": "When the sequence in which content is presented affects its meaning, a correct reading sequence can be programmatically determined.",
+      "testing_technique": "Disable CSS or use a screen reader in browse mode and read the page linearly. Confirm the DOM order preserves meaning compared with the visual order.",
+      "failures": [
+        "CSS positioning or flex/grid order makes DOM order contradict the visual meaning",
+        "Layout tables that linearize into a nonsensical order"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/meaningful-sequence.html"
+    },
+    {
+      "id": "1.3.3",
+      "name": "Sensory Characteristics",
+      "level": "A",
+      "definition": "Instructions for understanding and operating content do not rely solely on sensory characteristics such as shape, color, size, visual location, orientation, or sound.",
+      "testing_technique": "Search instructions for references like \"click the round button\", \"see the sidebar on the right\" or \"when you hear the tone\". Confirm each also identifies the target by name or text.",
+      "failures": [
+        "Instruction says \"press the green button to continue\" with no text label reference",
+        "\"Use the menu on the right\" with no other way to identify the menu"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/sensory-characteristics.html"
+    },
+    {
+      "id": "1.3.4",
+      "name": "Orientation",
+      "level": "AA",
+      "definition": "Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific orientation is essential.",
+      "testing_technique": "On a mobile device or emulator, rotate between portrait and landscape. Confirm content remains available and operable in both.",
+      "failures": [
+        "Site shows \"Please rotate your device\" and hides content in landscape",
+        "CSS transform locks content to portrait orientation"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/orientation.html"
+    },
+    {
+      "id": "1.3.5",
+      "name": "Identify Input Purpose",
+      "level": "AA",
+      "definition": "The purpose of each input field collecting information about the user can be programmatically determined when the field serves a purpose listed in the WCAG Input Purposes and the technology supports it.",
+      "testing_technique": "Inspect inputs that collect personal data (name, email, phone, address, etc.). Confirm each has the correct autocomplete token, e.g. autocomplete=\"email\".",
+      "failures": [
+        "Email field with no autocomplete attribute",
+        "Incorrect token, e.g. autocomplete=\"name\" on a phone field",
+        "autocomplete=\"off\" on a field collecting the user's own information"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/identify-input-purpose.html"
+    },
+    {
+      "id": "1.4.1",
+      "name": "Use of Color",
+      "level": "A",
+      "definition": "Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.",
+      "testing_technique": "View the page in grayscale or with a color-blindness simulator. Confirm status, required fields, errors, chart series and inline links remain distinguishable by text, icons, patterns or underlines.",
+      "failures": [
+        "Included/excluded features shown only as green and red dots",
+        "Form errors indicated only by a red border",
+        "Inline links distinguished from body text by color alone with insufficient contrast and no underline"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html"
+    },
+    {
+      "id": "1.4.2",
+      "name": "Audio Control",
+      "level": "A",
+      "definition": "If audio on a page plays automatically for more than 3 seconds, a mechanism is available to pause or stop it, or to control its volume independently of the system volume.",
+      "testing_technique": "Load the page and listen. If audio starts automatically and lasts over 3 seconds, confirm an early, keyboard-accessible control stops or mutes it.",
+      "failures": [
+        "Background music autoplays with no pause or mute control",
+        "Autoplaying video with sound whose controls are hidden"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/audio-control.html"
+    },
+    {
+      "id": "1.4.3",
+      "name": "Contrast (Minimum)",
+      "level": "AA",
+      "definition": "Text and images of text have a contrast ratio of at least 4.5:1, or at least 3:1 for large-scale text (18pt, or 14pt bold). Incidental text, decorative text and logotypes are exempt.",
+      "testing_technique": "Use a contrast analyzer or browser DevTools to measure foreground and background colors of all text states (default, hover, placeholder, disabled-but-informative). Check text over images and gradients at their worst point.",
+      "failures": [
+        "Light grey body or fine-print text on a white background below 4.5:1",
+        "White text on a light brand color below 4.5:1",
+        "Placeholder text used as the only instruction with low contrast"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"
+    },
+    {
+      "id": "1.4.4",
+      "name": "Resize Text",
+      "level": "AA",
+      "definition": "Except for captions and images of text, text can be resized without assistive technology up to 200 percent without loss of content or functionality.",
+      "testing_technique": "Zoom the browser to 200% and also increase only text size (browser text-zoom setting). Confirm no text is clipped, truncated, overlapped or hidden.",
+      "failures": [
+        "Fixed-height containers clip text when it is enlarged",
+        "Viewport meta tag disables zoom with user-scalable=no or maximum-scale=1"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html"
+    },
+    {
+      "id": "1.4.5",
+      "name": "Images of Text",
+      "level": "AA",
+      "definition": "If the technologies used can achieve the visual presentation, text is used to convey information rather than images of text, unless the image is customizable or the presentation is essential (e.g. a logotype).",
+      "testing_technique": "Find images containing text (banners, buttons, quotes). Confirm the same presentation could not reasonably be achieved with styled HTML text, or that the image is a logo.",
+      "failures": [
+        "Promotional headline delivered as a JPEG instead of styled text",
+        "Button labels rendered as images"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/images-of-text.html"
+    },
+    {
+      "id": "1.4.10",
+      "name": "Reflow",
+      "level": "AA",
+      "definition": "Content can be presented without loss of information or functionality, and without scrolling in two dimensions, at a width equivalent to 320 CSS pixels (or a height of 256 CSS pixels for horizontally scrolling content), except where two-dimensional layout is essential.",
+      "testing_technique": "Set the browser window to 1280px wide and zoom to 400% (or use a 320px viewport). Confirm content reflows into a single column without horizontal scrolling or hidden content.",
+      "failures": [
+        "Fixed-width container causes horizontal scrolling at 320px",
+        "Navigation items become unreachable at narrow widths"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html"
+    },
+    {
+      "id": "1.4.11",
+      "name": "Non-text Contrast",
+      "level": "AA",
+      "definition": "Visual information required to identify user interface components and their states, and meaningful parts of graphics, have a contrast ratio of at least 3:1 against adjacent colors.",
+      "testing_technique": "Measure input borders, button boundaries (when needed to identify them), focus indicators, checkbox states, icons and chart elements against adjacent colors using a contrast analyzer.",
+      "failures": [
+        "Text input border at 1.5:1 against the page background",
+        "Icon-only control with a low-contrast glyph",
+        "Custom focus ring below 3:1"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html"
+    },
+    {
+      "id": "1.4.12",
+      "name": "Text Spacing",
+      "level": "AA",
+      "definition": "No loss of content or functionality occurs when users set line height to 1.5 times font size, paragraph spacing to 2 times, letter spacing to 0.12 times and word spacing to 0.16 times the font size.",
+      "testing_technique": "Apply a text-spacing bookmarklet or user stylesheet with the four WCAG values. Confirm no text overlaps, is clipped or disappears.",
+      "failures": [
+        "Fixed-height buttons or cards clip text when spacing increases",
+        "Inline style with !important prevents spacing overrides from taking effect on layout-critical text"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/text-spacing.html"
+    },
+    {
+      "id": "1.4.13",
+      "name": "Content on Hover or Focus",
+      "level": "AA",
+      "definition": "Where pointer hover or keyboard focus triggers additional content to appear and then hide, the content is dismissible without moving hover or focus, hoverable without disappearing, and persistent until dismissed or no longer relevant.",
+      "testing_technique": "Trigger each tooltip, popover and hover menu with mouse and keyboard. Press Esc to dismiss, move the pointer onto the new content, and wait to confirm it does not time out.",
+      "failures": [
+        "Tooltip disappears when the pointer moves onto it",
+        "Hover content cannot be dismissed with Esc and obscures other content",
+        "Popup content closes automatically after a few seconds"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html"
+    },
+    {
+      "id": "2.1.1",
+      "name": "Keyboard",
+      "level": "A",
+      "definition": "All functionality of the content is operable through a keyboard interface without requiring specific timings for individual keystrokes, except where the underlying function requires path-dependent input.",
+      "testing_technique": "Put the mouse aside. Use Tab, Shift+Tab, Enter, Space, arrow keys and Esc to reach and operate every interactive element. Inspect custom controls for focusability and key handlers.",
+      "failures": [
+        "Clickable div or span with an onclick handler but no tabindex or keyboard handler",
+        "Functionality only available on mouse hover",
+        "Custom dropdown that cannot be opened from the keyboard"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html"
+    },
+    {
+      "id": "2.1.2",
+      "name": "No Keyboard Trap",
+      "level": "A",
+      "definition": "If keyboard focus can be moved to a component, focus can be moved away using only a keyboard interface; if more than standard keys are required, the user is advised of the method.",
+      "testing_technique": "Tab into every widget, embedded frame, modal and media player. Confirm Tab/Shift+Tab or Esc can always move focus out.",
+      "failures": [
+        "Embedded widget or iframe captures Tab and never releases focus",
+        "Script forces focus back into a field on blur"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/no-keyboard-trap.html"
+    },
+    {
+      "id": "2.1.4",
+      "name": "Character Key Shortcuts",
+      "level": "A",
+      "definition": "If a keyboard shortcut uses only letter, punctuation, number or symbol characters, it can be turned off, remapped to include a modifier key, or is only active when the relevant component has focus.",
+      "testing_technique": "Review documentation and scripts for single-key shortcuts. With focus outside inputs, press single characters and observe effects. Confirm a disable or remap option exists.",
+      "failures": [
+        "Pressing \"s\" anywhere on the page triggers search and cannot be turned off",
+        "Speech-input users trigger unintended actions through single-letter shortcuts"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/character-key-shortcuts.html"
+    },
+    {
+      "id": "2.2.1",
+      "name": "Timing Adjustable",
+      "level": "A",
+      "definition": "For each time limit set by the content, the user can turn it off, adjust it to at least ten times the default, or extend it with a simple action at least 20 seconds before expiry, with limited exceptions (real-time, essential, over 20 hours).",
+      "testing_technique": "Identify session timeouts, auto-advancing content and timed forms. Confirm users are warned and can extend, adjust or disable the limit.",
+      "failures": [
+        "Session expires without warning and discards form data",
+        "Promotional dialog auto-closes before it can be read"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/timing-adjustable.html"
+    },
+    {
+      "id": "2.2.2",
+      "name": "Pause, Stop, Hide",
+      "level": "A",
+      "definition": "Moving, blinking or scrolling information that starts automatically, lasts more than five seconds and is presented alongside other content can be paused, stopped or hidden; auto-updating information can be paused, stopped, hidden or have its frequency controlled.",
+      "testing_technique": "Look for carousels, marquees, animations and live tickers. Confirm a visible, keyboard-operable pause/stop control exists, or the motion stops within five seconds.",
+      "failures": [
+        "Auto-rotating carousel with no pause button",
+        "Scrolling news ticker that cannot be stopped"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html"
+    },
+    {
+      "id": "2.3.1",
+      "name": "Three Flashes or Below Threshold",
+      "level": "A",
+      "definition": "Web pages do not contain anything that flashes more than three times in any one-second period, or the flash is below the general and red flash thresholds.",
+      "testing_technique": "Identify flashing content in video, animation or GIFs. Use a tool such as the Photosensitive Epilepsy Analysis Tool (PEAT) to measure flash frequency and area.",
+      "failures": [
+        "Animated banner that flashes rapidly across a large area of the screen"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html"
+    },
+    {
+      "id": "2.4.1",
+      "name": "Bypass Blocks",
+      "level": "A",
+      "definition": "A mechanism is available to bypass blocks of content that are repeated on multiple web pages.",
+      "testing_technique": "Press Tab on page load and confirm a working skip link appears, and/or that landmarks (header, nav, main) and headings let screen reader users jump past repeated content.",
+      "failures": [
+        "No skip link and no main landmark on a page with long repeated navigation",
+        "Skip link target does not move focus to the main content"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/bypass-blocks.html"
+    },
+    {
+      "id": "2.4.2",
+      "name": "Page Titled",
+      "level": "A",
+      "definition": "Web pages have titles that describe topic or purpose.",
+      "testing_technique": "Check the browser tab or the title element. Confirm it exists, is not generic (e.g. \"Untitled\" or \"Home\"), and distinguishes the page from others on the site.",
+      "failures": [
+        "Missing or empty title element",
+        "Every page on the site shares the same title"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/page-titled.html"
+    },
+    {
+      "id": "2.4.3",
+      "name": "Focus Order",
+      "level": "A",
+      "definition": "If a web page can be navigated sequentially and the navigation sequence affects meaning or operation, focusable components receive focus in an order that preserves meaning and operability.",
+      "testing_technique": "Tab through the page and compare the focus sequence with the visual and logical order. Pay attention to positive tabindex values, dialogs and dynamically inserted content.",
+      "failures": [
+        "Positive tabindex values make focus jump around the page illogically",
+        "Opening a modal does not move focus into it"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html"
+    },
+    {
+      "id": "2.4.4",
+      "name": "Link Purpose (In Context)",
+      "level": "A",
+      "definition": "The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose would be ambiguous to users in general.",
+      "testing_technique": "Use a screen reader links list (e.g. NVDA Insert+F7, VoiceOver rotor). Confirm each link's purpose is clear from its text or its programmatic context (same sentence, paragraph, list item or table cell, or an associated heading).",
+      "failures": [
+        "Multiple \"Read more\" or \"Click here\" links with no distinguishing programmatic context",
+        "Icon-only link with no accessible name"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/link-purpose-in-context.html"
+    },
+    {
+      "id": "2.4.5",
+      "name": "Multiple Ways",
+      "level": "AA",
+      "definition": "More than one way is available to locate a web page within a set of web pages, except where the page is the result of, or a step in, a process.",
+      "testing_technique": "Confirm at least two of: site navigation, search, site map, table of contents, or related-page links can be used to find each page.",
+      "failures": [
+        "Large site reachable only through a single navigation menu, with no search or site map"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/multiple-ways.html"
+    },
+    {
+      "id": "2.4.6",
+      "name": "Headings and Labels",
+      "level": "AA",
+      "definition": "Headings and labels describe topic or purpose.",
+      "testing_technique": "Review the heading outline and form labels out of context (e.g. a screen reader headings list). Confirm each is descriptive enough to understand the content or input it introduces.",
+      "failures": [
+        "Several sections with the vague heading \"More\"",
+        "Form label \"Field 1\" that does not describe the expected input"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html"
+    },
+    {
+      "id": "2.4.7",
+      "name": "Focus Visible",
+      "level": "AA",
+      "definition": "Any keyboard-operable user interface has a mode of operation where the keyboard focus indicator is visible.",
+      "testing_technique": "Tab through every interactive element and confirm a visible focus indicator appears on each. Inspect CSS for outline: none or outline: 0 without a replacement style.",
+      "failures": [
+        "CSS removes the outline on links or buttons with no alternative focus style",
+        "Focus style identical to the default state"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"
+    },
+    {
+      "id": "2.4.11",
+      "name": "Focus Not Obscured (Minimum)",
+      "level": "AA",
+      "definition": "When a user interface component receives keyboard focus, the component is not entirely hidden due to author-created content.",
+      "testing_technique": "Tab through the page with sticky headers, footers, cookie banners and chat widgets visible. Confirm no focused element is completely covered.",
+      "failures": [
+        "Sticky footer or cookie banner fully covers focused links as the user tabs down the page",
+        "Non-modal dialog hides the element that has focus"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html"
+    },
+    {
+      "id": "2.5.1",
+      "name": "Pointer Gestures",
+      "level": "A",
+      "definition": "All functionality that uses multipoint or path-based gestures can be operated with a single pointer without a path-based gesture, unless the gesture is essential.",
+      "testing_technique": "Identify pinch, multi-finger swipe and path-based gestures (e.g. swipe carousels, custom sliders). Confirm single-tap or click alternatives such as buttons exist.",
+      "failures": [
+        "Map zoom available only via pinch",
+        "Carousel only advances with a swipe gesture"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html"
+    },
+    {
+      "id": "2.5.2",
+      "name": "Pointer Cancellation",
+      "level": "A",
+      "definition": "For functionality operated with a single pointer, the down-event is not used to execute the function, or completion occurs on the up-event with a way to abort or undo, or the up-event reverses the down-event, unless the down-event is essential.",
+      "testing_technique": "Press and hold the pointer on controls, then drag off before releasing. Confirm the action does not fire on mousedown/touchstart.",
+      "failures": [
+        "Action fires on mousedown, so users cannot cancel by moving the pointer away"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/pointer-cancellation.html"
+    },
+    {
+      "id": "2.5.3",
+      "name": "Label in Name",
+      "level": "A",
+      "definition": "For user interface components with labels that include text or images of text, the accessible name contains the text that is presented visually.",
+      "testing_technique": "Compare each control's visible label with its accessible name in DevTools. Confirm the visible text is included, ideally at the start. Test with speech input where possible.",
+      "failures": [
+        "Button visibly reads \"Search\" but aria-label is \"Find items\"",
+        "aria-label overrides visible link text with unrelated wording"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/label-in-name.html"
+    },
+    {
+      "id": "2.5.4",
+      "name": "Motion Actuation",
+      "level": "A",
+      "definition": "Functionality operated by device motion or user motion can also be operated by user interface components, and responding to motion can be disabled to prevent accidental actuation, unless essential or using an accessibility-supported interface.",
+      "testing_technique": "Identify shake, tilt or gesture-triggered features. Confirm an equivalent on-screen control exists and motion activation can be turned off.",
+      "failures": [
+        "\"Shake to undo\" with no on-screen undo control and no way to disable it"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/motion-actuation.html"
+    },
+    {
+      "id": "2.5.7",
+      "name": "Dragging Movements",
+      "level": "AA",
+      "definition": "All functionality that uses a dragging movement can be achieved by a single pointer without dragging, unless dragging is essential or determined by the user agent.",
+      "testing_technique": "Find drag-and-drop lists, sliders and sortable items. Confirm they can be operated by single clicks or taps (e.g. move up/down buttons, click-to-position).",
+      "failures": [
+        "Sortable list reorderable only by drag and drop",
+        "Range slider operable only by dragging the thumb"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html"
+    },
+    {
+      "id": "2.5.8",
+      "name": "Target Size (Minimum)",
+      "level": "AA",
+      "definition": "The size of the target for pointer inputs is at least 24 by 24 CSS pixels, except where sufficient spacing, an equivalent control, inline text, user agent control, or essential presentation applies.",
+      "testing_technique": "Measure interactive targets in DevTools. For targets under 24×24px, check that a 24px-diameter circle centered on each does not intersect another target or its circle.",
+      "failures": [
+        "16×16px icon buttons placed directly next to each other",
+        "Tiny pagination links with no spacing between them"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"
+    },
+    {
+      "id": "3.1.1",
+      "name": "Language of Page",
+      "level": "A",
+      "definition": "The default human language of each web page can be programmatically determined.",
+      "testing_technique": "Inspect the html element for a valid lang attribute matching the page's primary language (e.g. lang=\"en\").",
+      "failures": [
+        "html element has no lang attribute",
+        "lang attribute set to an invalid or incorrect value"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html"
+    },
+    {
+      "id": "3.1.2",
+      "name": "Language of Parts",
+      "level": "AA",
+      "definition": "The human language of each passage or phrase in the content can be programmatically determined, except for proper names, technical terms, words of indeterminate language and words that have become part of the surrounding text's vernacular.",
+      "testing_technique": "Identify passages in a language other than the page default. Confirm each is wrapped in an element with the correct lang attribute; listen with a screen reader to verify pronunciation switches.",
+      "failures": [
+        "A French testimonial on an English page with no lang=\"fr\""
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html"
+    },
+    {
+      "id": "3.2.1",
+      "name": "On Focus",
+      "level": "A",
+      "definition": "When any user interface component receives focus, it does not initiate a change of context.",
+      "testing_technique": "Tab to every focusable element without activating it. Confirm focus alone never opens a new window, submits a form, moves focus elsewhere or navigates.",
+      "failures": [
+        "Focusing a field automatically opens a popup window",
+        "Focusing a link navigates immediately"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/on-focus.html"
+    },
+    {
+      "id": "3.2.2",
+      "name": "On Input",
+      "level": "A",
+      "definition": "Changing the setting of any user interface component does not automatically cause a change of context unless the user has been advised of the behavior before using the component.",
+      "testing_technique": "Change select menus, radio buttons, checkboxes and text inputs. Confirm no navigation, form submission or major focus shift occurs without warning.",
+      "failures": [
+        "Selecting a country from a select element immediately navigates to a new page",
+        "Typing the last digit of a field submits the form without warning"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/on-input.html"
+    },
+    {
+      "id": "3.2.3",
+      "name": "Consistent Navigation",
+      "level": "AA",
+      "definition": "Navigational mechanisms repeated on multiple web pages within a set occur in the same relative order each time they are repeated, unless a change is initiated by the user.",
+      "testing_technique": "Compare navigation menus, headers and footers across several pages. Confirm repeated items appear in the same relative order.",
+      "failures": [
+        "Main navigation links appear in a different order on different pages"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/consistent-navigation.html"
+    },
+    {
+      "id": "3.2.4",
+      "name": "Consistent Identification",
+      "level": "AA",
+      "definition": "Components that have the same functionality within a set of web pages are identified consistently.",
+      "testing_technique": "Compare labels, alt text and accessible names for repeated functions (search, print, cart) across pages. Confirm the same function uses consistent naming.",
+      "failures": [
+        "The same search button is named \"Search\" on one page and \"Go\" on another"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/consistent-identification.html"
+    },
+    {
+      "id": "3.2.6",
+      "name": "Consistent Help",
+      "level": "A",
+      "definition": "If a set of web pages provides human contact details, a human contact mechanism, self-help options or a fully automated contact mechanism, these occur in the same relative order on each page where they are repeated, unless a change is initiated by the user.",
+      "testing_technique": "Locate help mechanisms (contact link, chat, FAQ) on several pages. Confirm their relative order within the page content is consistent.",
+      "failures": [
+        "Contact link is in the header on some pages and only in the footer on others"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/consistent-help.html"
+    },
+    {
+      "id": "3.3.1",
+      "name": "Error Identification",
+      "level": "A",
+      "definition": "If an input error is automatically detected, the item in error is identified and the error is described to the user in text.",
+      "testing_technique": "Submit forms with empty and invalid data. Confirm each error identifies the field and describes the problem in text, and that the message is programmatically associated (e.g. aria-describedby) or announced.",
+      "failures": [
+        "Invalid field indicated only by a red border",
+        "Generic message \"There was an error\" without identifying the field"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html"
+    },
+    {
+      "id": "3.3.2",
+      "name": "Labels or Instructions",
+      "level": "A",
+      "definition": "Labels or instructions are provided when content requires user input.",
+      "testing_technique": "Inspect each form field for a visible, persistent label or instruction, including required formats. Confirm placeholder text is not the only label.",
+      "failures": [
+        "Input field with placeholder text as its only label",
+        "Required date format not explained",
+        "Required fields marked only by color"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/labels-or-instructions.html"
+    },
+    {
+      "id": "3.3.3",
+      "name": "Error Suggestion",
+      "level": "AA",
+      "definition": "If an input error is automatically detected and suggestions for correction are known, the suggestions are provided to the user, unless doing so would jeopardize security or purpose.",
+      "testing_technique": "Trigger format and range errors. Confirm the messages explain how to fix the problem (e.g. \"Enter a date as DD/MM/YYYY\").",
+      "failures": [
+        "Message says \"Invalid input\" when the expected format is known"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/error-suggestion.html"
+    },
+    {
+      "id": "3.3.4",
+      "name": "Error Prevention (Legal, Financial, Data)",
+      "level": "AA",
+      "definition": "For pages that cause legal commitments or financial transactions, modify or delete user-controllable data, or submit test responses, submissions are reversible, checked for errors with an opportunity to correct, or confirmed before finalizing.",
+      "testing_technique": "Walk through purchases, contracts and account deletions. Confirm a review step, confirmation, or undo is offered before the action is final.",
+      "failures": [
+        "One-click purchase with no review or cancellation option",
+        "Account deletion without confirmation"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/error-prevention-legal-financial-data.html"
+    },
+    {
+      "id": "3.3.7",
+      "name": "Redundant Entry",
+      "level": "A",
+      "definition": "Information previously entered by or provided to the user that is required to be entered again in the same process is either auto-populated or available for the user to select, unless re-entry is essential, required for security, or the information is no longer valid.",
+      "testing_technique": "Complete multi-step processes. Confirm previously entered information (e.g. shipping address) is pre-filled or selectable rather than requiring re-typing.",
+      "failures": [
+        "Checkout requires typing the billing address again with no \"same as shipping\" option"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/redundant-entry.html"
+    },
+    {
+      "id": "3.3.8",
+      "name": "Accessible Authentication (Minimum)",
+      "level": "AA",
+      "definition": "A cognitive function test (such as remembering a password or solving a puzzle) is not required for any step in an authentication process unless an alternative, an assistance mechanism, object recognition, or personal content recognition is provided.",
+      "testing_technique": "Review login flows. Confirm password managers and paste are allowed, and that any CAPTCHA has a non-cognitive alternative.",
+      "failures": [
+        "Password field blocks paste, preventing password manager use",
+        "Login requires transcribing a distorted text CAPTCHA with no alternative"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/accessible-authentication-minimum.html"
+    },
+    {
+      "id": "4.1.2",
+      "name": "Name, Role, Value",
+      "level": "A",
+      "definition": "For all user interface components, the name and role can be programmatically determined; states, properties and values that can be set by the user can be programmatically set; and notification of changes is available to user agents, including assistive technologies.",
+      "testing_technique": "Inspect each control in the browser accessibility tree. Confirm it has an appropriate role, a meaningful accessible name, and exposes states (expanded, checked, selected) that update when changed. Verify with a screen reader.",
+      "failures": [
+        "Icon-only button with no accessible name",
+        "Custom toggle that does not expose its pressed or checked state",
+        "Disclosure button without aria-expanded"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html"
+    },
+    {
+      "id": "4.1.3",
+      "name": "Status Messages",
+      "level": "AA",
+      "definition": "Status messages can be programmatically determined through role or properties so they can be presented to the user by assistive technologies without receiving focus.",
+      "testing_technique": "Trigger actions that produce status updates (form submitted, item added, search results count). Confirm a screen reader announces them without focus moving, via role=\"status\", role=\"alert\" or aria-live.",
+      "failures": [
+        "\"Added to cart\" message appears visually but is not announced",
+        "Search results count updates without a live region"
+      ],
+      "understanding_url": "https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html"
+    }
+  ]
+}
