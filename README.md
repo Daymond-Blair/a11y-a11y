@@ -31,7 +31,7 @@ It is also deliberately designed so that **automated tools are not enough.** Eve
 
 ## How the project was specified
 
-I wrote a structured brief before any code existed and used it to direct Claude Code (an AI coding agent) through the build. The full prompt is in [`docs/project-spec.md`](docs/project-spec.md). Each section addresses one aspect of the problem:
+I wrote a structured brief before any code existed and used it to direct Claude Code (an AI coding agent) through the build. Before the build, I used v0 (Vercel's AI prototyping tool) to refine the brief and visualize how the app and audit pages might look. The full prompt is in [`docs/project-spec.md`](docs/project-spec.md). Each section addresses one aspect of the problem:
 
 | Section of the brief | What it pinned down | Why it mattered |
 |---|---|---|
