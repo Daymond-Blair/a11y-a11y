@@ -64,6 +64,18 @@
             </div>
 
             <div class="field">
+              <label for="f-steps">Steps to reproduce (optional)</label>
+              <p class="hint" id="f-steps-hint">Tools, settings and actions that expose the issue, one step per line.</p>
+              <textarea id="f-steps" name="steps" rows="3" aria-describedby="f-steps-hint"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="f-fix">Recommended fix (optional)</label>
+              <p class="hint" id="f-fix-hint">The specific change that would make it conform.</p>
+              <textarea id="f-fix" name="fix" rows="3" aria-describedby="f-fix-hint"></textarea>
+            </div>
+
+            <div class="field">
               <label for="f-wcag">WCAG success criterion (optional)</label>
               <select id="f-wcag" name="wcag" aria-describedby="f-wcag-help">
                 <option value="">Not specified</option>

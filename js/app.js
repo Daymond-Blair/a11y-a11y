@@ -18,6 +18,8 @@ const els = {
   formLocked: $("form-locked"),
   location: $("f-location"),
   description: $("f-description"),
+  steps: $("f-steps"),
+  fix: $("f-fix"),
   wcag: $("f-wcag"),
   wcagHelp: $("f-wcag-help"),
   saveBtn: $("save-btn"),
@@ -156,6 +158,7 @@ function renderFindings() {
         { class: "finding", id: `finding-${f.id}` },
         el("h3", {}, el("span", { class: "finding-number", text: `#${n} ` }), f.location),
         el("p", { text: f.description }),
+        findingDetails(f),
         f.wcag
           ? el("span", { class: "sc-tag", text: criterionLabel(f.wcag) })
           : el("span", { class: "muted", text: "No criterion specified" })
@@ -173,6 +176,15 @@ function renderFindings() {
       return item;
     })
   );
+}
+
+function findingDetails(f) {
+  const rows = [
+    ["Steps to reproduce", f.steps],
+    ["Recommended fix", f.fix],
+  ].filter(([, value]) => value);
+  if (!rows.length) return null;
+  return el("dl", { class: "finding-details" }, ...rows.flatMap(([term, value]) => [el("dt", { text: term }), el("dd", { text: value })]));
 }
 
 function actionButton(label, context, variant, onClick) {
@@ -224,6 +236,8 @@ function handleSubmitFinding(event) {
   const data = {
     location: els.location.value.trim(),
     description: els.description.value.trim(),
+    steps: els.steps.value.trim(),
+    fix: els.fix.value.trim(),
     wcag: els.wcag.value,
   };
 
@@ -253,6 +267,8 @@ function startEdit(id) {
   editingId = id;
   els.location.value = finding.location;
   els.description.value = finding.description;
+  els.steps.value = finding.steps || "";
+  els.fix.value = finding.fix || "";
   els.wcag.value = finding.wcag;
   renderCriterionHelp();
   setFieldError(els.location, "");
